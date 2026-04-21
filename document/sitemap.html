@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auctus — Platform Sitemap</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      padding: 40px 20px
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      margin-bottom: 6px
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 40px
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 40px
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600
+    }
+
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px
+    }
+
+    /* Node styles */
+    .node {
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      white-space: nowrap;
+      border: 2px solid rgba(0, 0, 0, .08);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+      transition: transform .2s
+    }
+
+    .node:hover {
+      transform: scale(1.05)
+    }
+
+    .node-root {
+      background: #a78bfa;
+      color: #fff;
+      font-size: 16px;
+      padding: 14px 32px;
+      border-color: #7c3aed
+    }
+
+    .node-public {
+      background: #fca5a5;
+      color: #7f1d1d;
+      border-color: #f87171
+    }
+
+    .node-auth {
+      background: #fcd34d;
+      color: #78350f;
+      border-color: #fbbf24
+    }
+
+    .node-market {
+      background: #93c5fd;
+      color: #1e3a5f;
+      border-color: #60a5fa
+    }
+
+    .node-buyer {
+      background: #86efac;
+      color: #14532d;
+      border-color: #4ade80
+    }
+
+    .node-seller {
+      background: #d9b99b;
+      color: #422006;
+      border-color: #c4956a
+    }
+
+    .node-admin {
+      background: #c4b5fd;
+      color: #3b0764;
+      border-color: #a78bfa
+    }
+
+    .node-email {
+      background: #fdba74;
+      color: #7c2d12;
+      border-color: #fb923c
+    }
+
+    .node-cron {
+      background: #e2e8f0;
+      color: #334155;
+      border-color: #94a3b8
+    }
+
+    .node-decision {
+      background: #fef08a;
+      color: #713f12;
+      border-radius: 6px;
+      border-color: #facc15;
+      font-size: 11px
+    }
+
+    /* Layout */
+    .tree {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0
+    }
+
+    .row {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      position: relative
+    }
+
+    .connector {
+      width: 2px;
+      height: 28px;
+      background: #94a3b8;
+      margin: 0 auto
+    }
+
+    .connector-h {
+      height: 2px;
+      background: #94a3b8;
+      flex: 1;
+      min-width: 20px;
+      align-self: center
+    }
+
+    .branch {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0
+    }
+
+    .branch-group {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap
+    }
+
+    .section {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 24px;
+      margin: 10px;
+      min-width: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0
+    }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #64748b;
+      margin-bottom: 12px
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+      margin-bottom: 40px
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0
+    }
+
+    /* Main grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      max-width: 1400px;
+      margin: 0 auto
+    }
+
+    .flow-arrow {
+      font-size: 18px;
+      color: #94a3b8;
+      line-height: 1
+    }
+
+    .small {
+      font-size: 10px;
+      color: #64748b;
+      font-weight: 500;
+      margin-top: 2px
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>AUCTUS.</h1>
+  <p class="subtitle">Platform Sitemap &amp; User Flow Diagram — Auction Management System</p>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#a78bfa"></div>Root
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#fca5a5"></div>Public Pages
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#fcd34d"></div>Auth / Decision
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#93c5fd"></div>Marketplace (Auth)
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#86efac"></div>Buyer Dashboard
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#d9b99b"></div>Seller Panel
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#c4b5fd"></div>Admin Panel
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#fdba74"></div>Email Triggers
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#e2e8f0"></div>Cron / System
+    </div>
+  </div>
+
+  <!-- ROOT -->
+  <div class="tree">
+    <div class="node node-root">🏠 Home ( / )</div>
+    <div class="connector"></div>
+
+    <!-- LEVEL 1: Main Branches -->
+    <div class="main-grid">
+
+      <!-- MARKETPLACE -->
+      <div class="section">
+        <div class="section-title">Marketplace</div>
+        <div class="node node-market">Live Auctions</div>
+        <div class="connector"></div>
+        <div class="node node-market">Auction Detail</div>
+        <div class="connector"></div>
+        <div class="branch-group">
+          <div class="col">
+            <div class="node node-decision">Not Logged In?</div>
+            <div class="connector"></div>
+            <div class="node node-auth">→ /auth</div>
+          </div>
+          <div class="col">
+            <div class="node node-decision">Logged In?</div>
+            <div class="connector"></div>
+            <div class="node node-market">Place Bid</div>
+            <div class="connector"></div>
+            <div class="node node-cron">Wallet Deducted</div>
+            <div class="connector"></div>
+            <div class="node node-email">Bid Confirmed</div>
+          </div>
+        </div>
+        <div style="height:16px"></div>
+        <div class="node node-market">Upcoming Auctions</div>
+        <div class="connector"></div>
+        <div class="node node-market">Closed Auctions</div>
+        <div class="connector"></div>
+        <div class="node node-market">Categories</div>
+        <div class="connector"></div>
+        <div class="node node-market">Favorites</div>
+        <div class="connector"></div>
+        <div class="node node-market">My Bids</div>
+      </div>
+
+      <!-- AUTH -->
+      <div class="section">
+        <div class="section-title">Authentication</div>
+        <div class="node node-public">Login / Register</div>
+        <div class="small">/auth</div>
+        <div class="connector"></div>
+        <div class="branch-group">
+          <div class="col">
+            <div class="node node-auth">Register</div>
+            <div class="connector"></div>
+            <div class="node node-email">OTP Email Sent</div>
+            <div class="connector"></div>
+            <div class="node node-auth">Verify OTP</div>
+            <div class="connector"></div>
+            <div class="node node-buyer">Dashboard</div>
+          </div>
+          <div class="col">
+            <div class="node node-auth">Login</div>
+            <div class="connector"></div>
+            <div class="node node-decision">Role Check</div>
+            <div class="connector"></div>
+            <div class="branch-group">
+              <div class="node node-buyer" style="font-size:10px">User</div>
+              <div class="node node-seller" style="font-size:10px">Seller</div>
+              <div class="node node-admin" style="font-size:10px">Admin</div>
+            </div>
+          </div>
+        </div>
+        <div style="height:16px"></div>
+        <div class="node node-public">Forgot Password</div>
+        <div class="small">/auth/forgot-password</div>
+        <div class="connector"></div>
+        <div class="node node-email">Reset OTP Email</div>
+        <div class="connector"></div>
+        <div class="node node-auth">Confirm OTP + New Password</div>
+      </div>
+
+      <!-- BUYER DASHBOARD -->
+      <div class="section">
+        <div class="section-title">Buyer Dashboard</div>
+        <div class="node node-buyer">User Dashboard</div>
+        <div class="small">/dashboard</div>
+        <div class="connector"></div>
+        <div class="node node-buyer">Profile</div>
+        <div class="small">/profile</div>
+        <div class="connector"></div>
+        <div class="node node-buyer">Wallet</div>
+        <div class="small">/wallet</div>
+        <div class="connector"></div>
+        <div class="branch-group">
+          <div class="col">
+            <div class="node node-buyer" style="font-size:10px">Deposit (Razorpay)</div>
+          </div>
+          <div class="col">
+            <div class="node node-buyer" style="font-size:10px">Withdraw (UPI)</div>
+            <div class="connector"></div>
+            <div class="node node-cron" style="font-size:10px">Admin Approval</div>
+          </div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="node node-buyer">Transactions</div>
+        <div class="small">/transactions</div>
+        <div class="connector"></div>
+        <div class="node node-buyer">Settings</div>
+        <div class="small">/settings</div>
+        <div class="connector"></div>
+        <div class="node node-buyer">Support Center</div>
+        <div class="small">/support</div>
+      </div>
+
+      <!-- SELLER PANEL -->
+      <div class="section">
+        <div class="section-title">Seller Panel</div>
+        <div class="node node-public">Become a Seller</div>
+        <div class="small">Register as Seller</div>
+        <div class="connector"></div>
+        <div class="node node-seller">Seller KYC</div>
+        <div class="small">/seller/kyc</div>
+        <div class="connector"></div>
+        <div class="node node-cron">Upload: PAN, GST, Bank Proof</div>
+        <div class="connector"></div>
+        <div class="node node-email">KYC Submitted</div>
+        <div class="connector"></div>
+        <div class="node node-decision">Admin Review</div>
+        <div class="connector"></div>
+        <div class="branch-group">
+          <div class="col">
+            <div class="node node-email">Approved Email</div>
+            <div class="connector"></div>
+            <div class="node node-seller">Seller Dashboard</div>
+            <div class="small">/seller/dashboard</div>
+          </div>
+          <div class="col">
+            <div class="node node-email">Rejected Email</div>
+            <div class="connector"></div>
+            <div class="node node-seller">Re-apply KYC</div>
+          </div>
+        </div>
+        <div style="height:16px"></div>
+        <div class="node node-seller">My Auctions</div>
+        <div class="small">/seller/auctions</div>
+        <div class="connector"></div>
+        <div class="node node-seller">Create Auction</div>
+        <div class="small">/seller/auctions/new</div>
+        <div class="connector"></div>
+        <div class="node node-seller">Payouts</div>
+        <div class="small">/seller/payouts</div>
+        <div class="connector"></div>
+        <div class="node node-seller">Seller Settings</div>
+        <div class="small">/seller/settings</div>
+      </div>
+
+      <!-- ADMIN -->
+      <div class="section">
+        <div class="section-title">Admin Panel</div>
+        <div class="node node-admin">Admin Dashboard</div>
+        <div class="small">/admin/dashboard</div>
+        <div class="connector"></div>
+        <div class="node node-admin">KYC Review Queue</div>
+        <div class="connector"></div>
+        <div class="branch-group">
+          <div class="col">
+            <div class="node node-admin" style="font-size:10px">Approve</div>
+            <div class="connector"></div>
+            <div class="node node-email" style="font-size:10px">Approval Email</div>
+          </div>
+          <div class="col">
+            <div class="node node-admin" style="font-size:10px">Reject</div>
+            <div class="connector"></div>
+            <div class="node node-email" style="font-size:10px">Rejection Email</div>
+          </div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="node node-admin">Financial Requests</div>
+        <div class="small">Payouts & Withdrawals</div>
+        <div class="connector"></div>
+        <div class="node node-admin">Newsletter Broadcast</div>
+        <div class="connector"></div>
+        <div class="node node-email">Broadcast Email</div>
+        <div style="height:12px"></div>
+        <div class="node node-admin">Admin Withdraw</div>
+        <div class="small">Commission Earnings</div>
+        <div class="connector"></div>
+        <div class="node node-admin">Reports & Analytics</div>
+        <div class="small">/reports</div>
+      </div>
+
+      <!-- AUCTION LIFECYCLE (CRON) -->
+      <div class="section">
+        <div class="section-title">Auction Lifecycle (Cron)</div>
+        <div class="node node-cron">Upcoming Auction</div>
+        <div class="connector"></div>
+        <div class="node node-decision">startsAt ≤ now?</div>
+        <div class="connector"></div>
+        <div class="node node-cron">Status → Live</div>
+        <div class="connector"></div>
+        <div class="node node-email">Watchers Notified</div>
+        <div class="small">Auction Started Email</div>
+        <div style="height:12px"></div>
+        <div class="node node-cron">Live Auction</div>
+        <div class="connector"></div>
+        <div class="node node-decision">endsAt ≤ now OR stopped?</div>
+        <div class="connector"></div>
+        <div class="node node-cron">Status → Closed</div>
+        <div class="connector"></div>
+        <div class="branch-group">
+          <div class="col">
+            <div class="node node-decision" style="font-size:10px">Has Bids?</div>
+            <div class="connector"></div>
+            <div class="node node-cron" style="font-size:10px">90% → Seller Wallet</div>
+            <div class="connector"></div>
+            <div class="node node-cron" style="font-size:10px">10% → Admin Wallet</div>
+            <div class="connector"></div>
+            <div class="node node-email" style="font-size:10px">Winner Email</div>
+            <div class="connector"></div>
+            <div class="node node-email" style="font-size:10px">Seller Sold Email</div>
+          </div>
+          <div class="col">
+            <div class="node node-decision" style="font-size:10px">No Bids</div>
+            <div class="connector"></div>
+            <div class="node node-cron" style="font-size:10px">Closed (No Winner)</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main-grid -->
+
+    <!-- FOOTER -->
+    <div style="margin-top:40px;max-width:1400px;margin-left:auto;margin-right:auto">
+      <div class="section" style="width:100%">
+        <div class="section-title">Footer Navigation & Resources</div>
+        <div class="branch-group" style="gap:32px">
+          <div class="col" style="gap:8px">
+            <div class="node node-public" style="font-size:10px">Live Auctions</div>
+            <div class="node node-public" style="font-size:10px">Upcoming Events</div>
+            <div class="node node-public" style="font-size:10px">Past Auctions</div>
+          </div>
+          <div class="col" style="gap:8px">
+            <div class="node node-public" style="font-size:10px">How it Works</div>
+            <div class="node node-public" style="font-size:10px">Bidding Rules</div>
+            <div class="node node-public" style="font-size:10px">Seller Terms</div>
+            <div class="node node-public" style="font-size:10px">Help & FAQ</div>
+          </div>
+          <div class="col" style="gap:8px">
+            <div class="node node-cron" style="font-size:10px">KYC: PAN Card</div>
+            <div class="node node-cron" style="font-size:10px">KYC: GST Certificate</div>
+            <div class="node node-cron" style="font-size:10px">KYC: Bank Proof</div>
+            <div class="node node-cron" style="font-size:10px">KYC: Address Proof</div>
+          </div>
+          <div class="col" style="gap:8px">
+            <div class="node node-email" style="font-size:10px">Newsletter Subscribe</div>
+            <div class="node node-public" style="font-size:10px">Privacy Policy</div>
+            <div class="node node-public" style="font-size:10px">Terms of Service</div>
+          </div>
+          <div class="col" style="gap:8px">
+            <div class="node node-public" style="font-size:10px">Facebook</div>
+            <div class="node node-public" style="font-size:10px">Twitter</div>
+            <div class="node node-public" style="font-size:10px">Instagram</div>
+            <div class="node node-public" style="font-size:10px">LinkedIn</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p style="text-align:center;margin-top:40px;font-size:11px;color:#94a3b8">&copy; 2026 Auctus Auction Platform.
+      Sitemap generated for academic documentation.</p>
+  </div>
+
+</body>
+
+</html>

@@ -45,6 +45,16 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  registrationOtp: {
+    type: String,
+    default: null,
+    select: false
+  },
+  registrationOtpExpires: {
+    type: Date,
+    default: null,
+    select: false
+  },
   /** Available balance for bidding (whole INR, same unit as auction bids). */
   walletBalance: {
     type: Number,

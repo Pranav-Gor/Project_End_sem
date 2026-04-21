@@ -6,17 +6,12 @@ import { formatINR } from '../lib/currency'
 import { apiGet } from '../lib/api'
 import { formatTimeLeftShort } from '../lib/auctionTime'
 import { 
-  Search, Bell, Menu, X, Flame, Filter, Grid3X3, List,
+  Search, Menu, X, Flame, Filter, Grid3X3, List,
   Heart, Eye, Timer, Star, Gavel, ChevronDown,
   Sun, Moon, MessageCircle, DollarSign, Package, Trash2, Settings
 } from 'lucide-react'
 
-const notificationsData = [
-  { id: 1, type: 'bid', title: 'You were outbid!', message: 'Someone placed a higher bid', time: '2 min ago', read: false, icon: DollarSign, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
-  { id: 2, type: 'message', title: 'New message', message: 'Seller replied to your question', time: '15 min ago', read: false, icon: MessageCircle, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
-  { id: 3, type: 'win', title: 'Auction Ending Soon!', message: 'Item ends in 30 minutes', time: '1 hour ago', read: false, icon: Timer, color: 'text-red-500', bgColor: 'bg-red-500/10' },
-  { id: 4, type: 'shipping', title: 'Item Shipped', message: 'Your item has been shipped', time: '3 hours ago', read: true, icon: Package, color: 'text-green-500', bgColor: 'bg-green-500/10' }
-]
+
 
 const sortOptions = [
   { value: 'ending-soon', label: 'Ending Soon' },
@@ -38,7 +33,6 @@ export default function LiveAuctions() {
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [priceRange] = useState([0, 2000000])
   const [favorites, setFavorites] = useState([1, 3])
-  const [notifications, setNotifications] = useState(notificationsData)
   const [showNotifications, setShowNotifications] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   
@@ -51,7 +45,6 @@ export default function LiveAuctions() {
   }, [theme])
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light')
-  const unreadCount = notifications.filter(n => !n.read).length
   const markAsRead = (id) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
   const markAllAsRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })))
   const deleteNotification = (id, e) => { e.stopPropagation(); setNotifications(prev => prev.filter(n => n.id !== id)) }
@@ -149,39 +142,8 @@ export default function LiveAuctions() {
               <button onClick={toggleTheme} className="p-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
-
-              <div className="relative notification-container">
-                <button onClick={() => setShowNotifications(!showNotifications)} className="relative p-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
-                  <Bell className="w-5 h-5 lg:w-6 lg:h-6" />
-                  {unreadCount > 0 && <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">{unreadCount}</span>}
-                </button>
-                {showNotifications && (
-                  <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden z-50">
-                    <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-white/5">
-                      <h3 className="font-bold text-slate-900 dark:text-white">Notifications</h3>
-                      {unreadCount > 0 && <button onClick={markAllAsRead} className="text-xs text-auctus-teal hover:text-auctus-cyan font-medium">Mark all read</button>}
-                    </div>
-                    <div className="max-h-96 overflow-y-auto">
-                      {notifications.map((notification) => (
-                        <div key={notification.id} onClick={() => markAsRead(notification.id)} className={`flex items-start gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors border-b border-slate-100 dark:border-white/5 last:border-0 ${!notification.read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}>
-                          <div className={`p-2 rounded-xl ${notification.bgColor} flex-shrink-0`}><notification.icon className={`w-5 h-5 ${notification.color}`} /></div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm text-slate-900 dark:text-white">{notification.title}</p>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">{notification.message}</p>
-                            <p className="text-xs text-slate-400 mt-1">{notification.time}</p>
-                          </div>
-                          {!notification.read && <div className="w-2 h-2 bg-auctus-teal rounded-full flex-shrink-0"></div>}
-                          <button onClick={(e) => deleteNotification(notification.id, e)} className="p-1 text-slate-300 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
               <NavAuthButtons />
               <NavAuthButtons compact />
-
               <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="lg:hidden p-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
                 {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
@@ -285,7 +247,13 @@ export default function LiveAuctions() {
                 className={`group bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 hover:border-auctus-teal/50 dark:hover:border-auctus-teal/50 hover:shadow-xl hover:shadow-auctus-teal/10 transition-all duration-300 cursor-pointer ${viewMode === 'list' ? 'flex' : ''}`}
               >
                 <div className={`relative overflow-hidden ${viewMode === 'list' ? 'w-48 flex-shrink-0' : 'aspect-[4/3]'}`}>
-                  <img src={auction.image} alt={auction.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  {auction.image ? (
+                    <img src={auction.image} alt={auction.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-400 bg-slate-200 dark:bg-slate-700">
+                      <Gavel className="w-8 h-8 opacity-20" />
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                   {auction.featured && (
                     <span className="absolute top-3 left-3 px-3 py-1 bg-auctus-teal text-white text-xs font-bold rounded-full flex items-center gap-1">

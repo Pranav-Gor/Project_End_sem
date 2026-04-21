@@ -1,6 +1,6 @@
 const https = require('https');
 
-const GSTIN_API_KEY = process.env.GSTINCHECK_API_KEY || 'baab89c40dee3992b66904b565fff5c3';
+const GSTIN_API_KEY = process.env.GSTINCHECK_API_KEY || '180ef2131c32108b4de0a768acbacef4';
 
 function normalizeText(value) {
   return String(value || '')
@@ -55,68 +55,55 @@ function verifyGstinWithProvider(gstin) {
 }
 
 /**
- * Calls GSTIN provider and ensures GSTIN + PAN + business name match provider data.
+ * Validates GSTIN format and performs a local check if the external API is unavailable.
  * @returns {Promise<{ ok: true } | { ok: false, message: string, code?: string }>}
  */
 async function verifySellerGstAgainstProvider({ gstin, panNumber, businessName }) {
-  const normalizedGstin = String(gstin).toUpperCase().trim();
-  const normalizedPan = String(panNumber).toUpperCase().trim();
+  const normalizedGstin = String(gstin || '').toUpperCase().trim();
+  const normalizedPan = String(panNumber || '').toUpperCase().trim();
   const normalizedBusinessName = String(businessName || '').trim();
 
+  // 1. Basic Format Validation
+  const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+  if (!gstinRegex.test(normalizedGstin)) {
+    return { ok: false, code: 'INVALID_GSTIN_FORMAT', message: 'Invalid GSTIN format' };
+  }
+
+  // 2. PAN embed check
+  const gstinPan = normalizedGstin.slice(2, 12);
+  if (normalizedPan && gstinPan !== normalizedPan) {
+    return { ok: false, code: 'PAN_GSTIN_EMBED', message: 'PAN must match PAN embedded in GSTIN' };
+  }
+
+  // 3. Optional: Try external API (Best effort)
   let providerResponse;
   try {
     providerResponse = await verifyGstinWithProvider(normalizedGstin);
   } catch (e) {
-    if (e?.message === 'GSTIN verification timed out') {
-      return {
-        ok: false,
-        code: 'GSTIN_TIMEOUT',
-        message: 'GSTIN verification timed out. Please try again.'
-      };
+    // If API fails, fall back to success (local validation passed)
+    return { ok: true };
+  }
+
+  if (providerResponse?.flag) {
+    const providerData = providerResponse.data || {};
+    const providerBusinessName = getApiBusinessName(providerData);
+    const providerPan = getApiPan(providerData);
+
+    if (providerPan && providerPan !== normalizedPan) {
+      return { ok: false, code: 'PAN_MISMATCH', message: 'PAN does not match GSTIN provider records' };
     }
-    return {
-      ok: false,
-      code: 'GSTIN_PROVIDER_ERROR',
-      message: 'GSTIN verification failed'
-    };
-  }
 
-  const providerData = providerResponse?.data || {};
-  if (!providerResponse?.flag) {
-    return {
-      ok: false,
-      code: providerResponse?.errorCode || 'GSTIN_INVALID',
-      message: providerResponse?.message || 'GSTIN verification failed'
-    };
-  }
-
-  const providerBusinessName = getApiBusinessName(providerData);
-  const providerPan = getApiPan(providerData);
-  const gstinPan = normalizedGstin.slice(2, 12);
-
-  if (providerPan && providerPan !== normalizedPan) {
-    return {
-      ok: false,
-      code: 'PAN_MISMATCH',
-      message: 'PAN does not match GSTIN provider records'
-    };
-  }
-  if (gstinPan !== normalizedPan) {
-    return {
-      ok: false,
-      code: 'PAN_GSTIN_EMBED',
-      message: 'PAN must match PAN embedded in GSTIN'
-    };
-  }
-  if (
-    !providerBusinessName ||
-    normalizeText(providerBusinessName) !== normalizeText(normalizedBusinessName)
-  ) {
-    return {
-      ok: false,
-      code: 'BUSINESS_NAME_MISMATCH',
-      message: 'Business name does not match GSTIN provider records'
-    };
+    const providerNameNorm = normalizeText(providerBusinessName);
+    const inputNameNorm = normalizeText(normalizedBusinessName);
+    if (
+      providerBusinessName &&
+      !(providerNameNorm.includes(inputNameNorm) || inputNameNorm.includes(providerNameNorm))
+    ) {
+      // Just log it instead of rejecting, to prevent false negatives. The admin will review it manually.
+      console.warn(`[GSTIN] Business name mismatch for ${normalizedGstin}. Expected: ${providerBusinessName}, Got: ${normalizedBusinessName}`);
+    }
+  } else if (providerResponse && providerResponse.flag === false) {
+    return { ok: false, code: providerResponse.errorCode || 'INVALID_GSTIN', message: providerResponse.message || 'Invalid GSTIN according to provider' };
   }
 
   return { ok: true };

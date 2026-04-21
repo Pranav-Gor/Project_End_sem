@@ -159,6 +159,16 @@ export default function SellerAuctions() {
                       </td>
                       <td className="px-6 py-5">
                         {getStatusBadge(a.status)}
+                        {a.status === 'closed' && a.bids?.length > 0 && (
+                          <div className="mt-1.5 p-1.5 rounded bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-500/20 inline-block">
+                            <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                              Winner: {a.bids[a.bids.length - 1].bidderName}
+                            </p>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                              Amount: {formatINR(a.bids[a.bids.length - 1].amount)}
+                            </p>
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-5">
                         <p className="text-xs font-bold text-slate-700 dark:text-slate-300">{new Date(a.endsAt).toLocaleDateString()}</p>

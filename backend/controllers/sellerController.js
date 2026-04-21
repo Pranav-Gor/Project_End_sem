@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Auction = require('../models/Auction');
 const { validationResult } = require('express-validator');
 const { verifySellerGstAgainstProvider } = require('../utils/gstinVerify');
+const { uploadBase64 } = require('../utils/cloudinary');
 
 /**
  * POST /api/seller/applications
@@ -25,9 +26,14 @@ exports.submitSellerApplication = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    const normalizedGstin = String(req.body.gstin).toUpperCase();
-    const normalizedPan = String(req.body.panNumber).toUpperCase();
-    const normalizedBusinessName = String(req.body.businessName || '');
+    const { 
+      businessName, gstin, panNumber, businessAddress, 
+      gstCertificateDataUrl, panCertificateDataUrl, bankProofDataUrl 
+    } = req.body;
+
+    const normalizedGstin = String(gstin).toUpperCase();
+    const normalizedPan = String(panNumber).toUpperCase();
+    const normalizedBusinessName = String(businessName || '');
 
     const gst = await verifySellerGstAgainstProvider({
       gstin: normalizedGstin,
@@ -42,16 +48,28 @@ exports.submitSellerApplication = async (req, res) => {
       });
     }
 
+    let finalGstUrl = gstCertificateDataUrl;
+    let finalPanUrl = panCertificateDataUrl;
+    let finalBankUrl = bankProofDataUrl;
+
+    // Save directly to local database as base64 strings as requested
+    // No Cloudinary/Supabase CDN upload for KYC docs anymore
+    // (Seller side auction images still use CDN via uploadRoutes)
+
     const payload = {
-      applicantId: userId,
+      applicantId: user._id,
+      applicantName: user.name,
+      applicantEmail: user.email,
+      applicantPhone: user.profile?.phone || '',
+
       businessName: normalizedBusinessName,
       gstin: normalizedGstin,
       panNumber: normalizedPan,
-      businessAddress: req.body.businessAddress ? String(req.body.businessAddress) : '',
+      businessAddress: businessAddress ? String(businessAddress) : '',
 
-      gstCertificateDataUrl: req.body.gstCertificateDataUrl,
-      panCertificateDataUrl: req.body.panCertificateDataUrl,
-      bankProofDataUrl: req.body.bankProofDataUrl,
+      gstCertificateDataUrl: finalGstUrl,
+      panCertificateDataUrl: finalPanUrl,
+      bankProofDataUrl: finalBankUrl,
 
       status: 'pending',
       reviewNote: '',
@@ -166,7 +184,7 @@ exports.createAuction = async (req, res) => {
 
     const {
       title, category, description, images,
-      startingBid, minIncrement, startsAt: rawStartsAt,
+      startingBid, minIncrement, startsAt: rawStartsAt, durationDays: rawDurationDays,
       condition, shipping, returns,
     } = req.body;
 
@@ -181,12 +199,15 @@ exports.createAuction = async (req, res) => {
     }
 
     // Duration rule
-    let durationMs;
-    if (!startsAt) {
-      durationMs = 2 * 60 * 60 * 1000; // 2 hours if immediate
-    } else {
-      durationMs = 7 * 24 * 60 * 60 * 1000; // 7 days if scheduled
+    let parsedDurationDays = parseInt(rawDurationDays, 10);
+    if (isNaN(parsedDurationDays) || parsedDurationDays < 1) {
+      parsedDurationDays = 1;
     }
+    if (parsedDurationDays > 3) {
+      return res.status(400).json({ success: false, message: 'Duration cannot exceed 3 days' });
+    }
+
+    let durationMs = parsedDurationDays * 24 * 60 * 60 * 1000;
     
     const auctionEnd = new Date(auctionStart.getTime() + durationMs);
     const status = auctionStart > now ? 'upcoming' : 'live';

@@ -44,6 +44,10 @@ export default function Auth() {
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
 
+  const [otpStep, setOtpStep] = useState(false)
+  const [registrationOtp, setRegistrationOtp] = useState('')
+  const [pendingRegEmail, setPendingRegEmail] = useState('')
+
   const [regFirst, setRegFirst] = useState('')
   const [regLast, setRegLast] = useState('')
   const [regEmail, setRegEmail] = useState('')
@@ -53,6 +57,18 @@ export default function Auth() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
+
+  const [resendCooldown, setResendCooldown] = useState(0)
+
+  useEffect(() => {
+    let timer
+    if (resendCooldown > 0 && otpStep) {
+      timer = setInterval(() => {
+        setResendCooldown(prev => prev - 1)
+      }, 1000)
+    }
+    return () => clearInterval(timer)
+  }, [resendCooldown, otpStep])
 
   const loginFormRef = useRef(null)
   const registerFormRef = useRef(null)
@@ -250,11 +266,73 @@ export default function Auth() {
         return
       }
 
+      // If requires OTP for user registration
+      if (data?.data?.requiresOtp) {
+        setPendingRegEmail(data.data.email || regEmail.trim().toLowerCase())
+        setOtpStep(true)
+        setResendCooldown(10) // start 10s cooldown
+        setInfo('OTP sent to your email. Please enter it below.')
+        return
+      }
+
       const { user, tokens, redirectTo } = data.data
       persistSession({ user, tokens })
       navigate(resolvePostLoginPath({ redirectTo }, nextAfterAuth), { replace: true })
     } catch (err) {
       setError('Cannot reach server. Is the API running on port 5000?')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault()
+    setError('')
+    setInfo('')
+    setLoading(true)
+    try {
+      const { ok, data } = await apiPost('/api/auth/verify-registration', {
+        email: pendingRegEmail,
+        otp: registrationOtp
+      })
+
+      if (!ok || !data?.success) {
+        setError(data?.message || 'Invalid OTP.')
+        setLoading(false)
+        return
+      }
+
+      const { user, tokens, redirectTo } = data.data
+      persistSession({ user, tokens })
+      window.location.replace(resolvePostLoginPath({ redirectTo }, nextAfterAuth))
+    } catch (err) {
+      setError('Cannot reach server.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return
+    setError('')
+    setInfo('')
+    setLoading(true)
+    try {
+      const { ok, status, data } = await apiPost('/api/auth/resend-registration-otp', {
+        email: pendingRegEmail
+      })
+      if (!ok || !data?.success) {
+        if (status === 429) {
+          setError(data?.message || 'Too many OTP requests. Try again later.')
+        } else {
+          setError(data?.message || 'Failed to resend OTP.')
+        }
+      } else {
+        setInfo('OTP resent to your email.')
+        setResendCooldown(10)
+      }
+    } catch (err) {
+      setError('Cannot reach server.')
     } finally {
       setLoading(false)
     }
@@ -272,6 +350,9 @@ export default function Auth() {
   }
 
   const handlePrimaryAction = () => {
+    if (otpStep) {
+      return // handeled by the form directly
+    }
     if (isLogin) {
       loginFormRef.current?.requestSubmit()
     } else {
@@ -359,7 +440,48 @@ export default function Auth() {
 
           <div className="relative overflow-y-auto overflow-x-hidden pr-2 flex-grow custom-scrollbar">
 
-            <div className={`transition-all duration-500 ease-in-out ${isLogin ? 'opacity-100 translate-x-0 relative z-10' : 'opacity-0 translate-x-10 absolute inset-0 pointer-events-none'}`}>
+            {otpStep && (
+              <div className={`transition-all duration-500 ease-in-out opacity-100 translate-x-0 relative z-10`}>
+                <form className="space-y-6" onSubmit={handleVerifyOtp}>
+                  <div className="relative group">
+                    <input
+                      type="text"
+                      id="otp"
+                      maxLength={4}
+                      value={registrationOtp}
+                      onChange={(e) => setRegistrationOtp(e.target.value.replace(/\D/g, ''))}
+                      className="peer w-full px-5 pt-8 pb-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-2xl focus:outline-none focus:border-auctus-teal focus:ring-2 focus:ring-auctus-teal/20 text-slate-900 dark:text-white transition-all shadow-sm tracking-[1em] font-mono text-center text-xl"
+                      placeholder=" "
+                      required
+                    />
+                    <label htmlFor="otp" className="absolute left-5 top-5 text-slate-400 font-medium transition-all duration-300 peer-placeholder-shown:text-base peer-placeholder-shown:top-5 peer-focus:top-3 peer-focus:text-xs peer-focus:text-auctus-teal">4-Digit OTP</label>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading || registrationOtp.length !== 4}
+                    className="w-full py-4 rounded-2xl font-extrabold text-white bg-gradient-to-r from-auctus-teal via-[#128a83] to-auctus-cyan shadow-lg shadow-auctus-teal/20 hover:shadow-glow-hover transform hover:-translate-y-1 active:scale-95 transition-all duration-300 flex justify-center items-center gap-2 group disabled:opacity-60 disabled:pointer-events-none"
+                  >
+                    <span className="text-[15px] tracking-wide">{loading ? 'Verifying...' : 'Verify Email'}</span>
+                    <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  <div className="flex justify-between items-center px-1">
+                    <button 
+                      type="button" 
+                      onClick={handleResendOtp}
+                      disabled={resendCooldown > 0 || loading}
+                      className="text-sm font-bold text-auctus-teal hover:underline disabled:opacity-50 disabled:no-underline transition-all"
+                    >
+                      {resendCooldown > 0 ? `Resend OTP in ${resendCooldown}s` : 'Resend OTP'}
+                    </button>
+                    <button type="button" onClick={() => setOtpStep(false)} className="text-sm text-slate-500 hover:text-slate-800 dark:hover:text-white font-bold transition-all">
+                      Cancel & Go Back
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            <div className={`transition-all duration-500 ease-in-out ${isLogin && !otpStep ? 'opacity-100 translate-x-0 relative z-10' : 'opacity-0 translate-x-10 absolute inset-0 pointer-events-none'}`}>
               <form ref={loginFormRef} className="space-y-6" onSubmit={handleLogin}>
                 <div className="relative group">
                   <input
@@ -401,7 +523,7 @@ export default function Auth() {
               </form>
             </div>
 
-            <div className={`transition-all duration-500 ease-in-out ${!isLogin ? 'opacity-100 translate-x-0 relative z-10' : 'opacity-0 -translate-x-10 absolute inset-0 pointer-events-none'}`}>
+            <div className={`transition-all duration-500 ease-in-out ${!isLogin && !otpStep ? 'opacity-100 translate-x-0 relative z-10' : 'opacity-0 -translate-x-10 absolute inset-0 pointer-events-none'}`}>
               <form ref={registerFormRef} className="space-y-6" onSubmit={handleRegister}>
 
                 <div className="flex gap-4 mb-2">
@@ -587,26 +709,28 @@ export default function Auth() {
             </div>
           </div>
 
-          <div className="mt-6 flex-shrink-0 relative z-20 bg-white/5 pt-2">
-            <button
-              type="button"
-              disabled={loading}
-              onClick={handlePrimaryAction}
-              className="w-full py-4 rounded-2xl font-extrabold text-white bg-gradient-to-r from-auctus-teal via-[#128a83] to-auctus-cyan shadow-lg shadow-auctus-teal/20 hover:shadow-glow-hover transform hover:-translate-y-1 active:scale-95 transition-all duration-300 flex justify-center items-center gap-2 group disabled:opacity-60 disabled:pointer-events-none"
-            >
-              <span className="text-[15px] tracking-wide">
-                {loading ? 'Please wait…' : isLogin ? 'Sign In Securely' : (accountType === 'bidder' ? 'Create Bidder Account' : 'Register Web Seller')}
-              </span>
-              <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
-            </button>
+          {!otpStep && (
+            <div className="mt-6 flex-shrink-0 relative z-20 bg-white/5 pt-2">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={handlePrimaryAction}
+                className="w-full py-4 rounded-2xl font-extrabold text-white bg-gradient-to-r from-auctus-teal via-[#128a83] to-auctus-cyan shadow-lg shadow-auctus-teal/20 hover:shadow-glow-hover transform hover:-translate-y-1 active:scale-95 transition-all duration-300 flex justify-center items-center gap-2 group disabled:opacity-60 disabled:pointer-events-none"
+              >
+                <span className="text-[15px] tracking-wide">
+                  {loading ? 'Please wait…' : isLogin ? 'Sign In Securely' : (accountType === 'bidder' ? 'Create Bidder Account' : 'Register Web Seller')}
+                </span>
+                <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              </button>
 
-            <div className="flex justify-center flex-col items-center gap-1 mt-5 pb-2 text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wide">
-              <div className="flex items-center gap-1.5 opacity-80">
-                <Lock size={13} className="text-auctus-cyan" />
-                <span>Secure session with your MongoDB-backed account</span>
+              <div className="flex justify-center flex-col items-center gap-1 mt-5 pb-2 text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wide">
+                <div className="flex items-center gap-1.5 opacity-80">
+                  <Lock size={13} className="text-auctus-cyan" />
+                  <span>Secure session with your MongoDB-backed account</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
@@ -616,10 +740,9 @@ export default function Auth() {
 function LinkBrand() {
   return (
     <div className="mb-10 flex items-center gap-3">
-      <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl">
-        <Gavel className="w-7 h-7 lg:w-8 lg:h-8 text-white" />
-      </div>
-      <span className="text-3xl lg:text-4xl font-black text-white tracking-tight">AUCTUS</span>
+      <Link to="/" className="text-3xl lg:text-4xl font-black text-white tracking-widest uppercase hover:text-auctus-cyan transition-colors">
+        Auctus.
+      </Link>
     </div>
   )
 }

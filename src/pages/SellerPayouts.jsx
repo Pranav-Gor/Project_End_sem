@@ -37,8 +37,8 @@ export default function SellerPayouts() {
   }, [])
 
   const handleRequestPayout = async () => {
-    if (data.stats.balance < 1000) {
-      setError('Minimum payout amount is ₹1,000')
+    if (data.stats.balance < 1) {
+      setError('Minimum payout amount is ₹1')
       return
     }
 
@@ -103,7 +103,7 @@ export default function SellerPayouts() {
               <div className="flex items-end justify-between gap-4">
                 <p className="text-4xl font-black text-white">{formatINR(data.stats.balance)}</p>
                 <button 
-                  disabled={actionLoading || data.stats.balance < 1000}
+                  disabled={actionLoading || data.stats.balance < 1}
                   onClick={handleRequestPayout}
                   className="px-6 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-white text-xs font-black shadow-lg shadow-teal-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
                 >

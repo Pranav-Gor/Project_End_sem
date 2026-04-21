@@ -11,13 +11,8 @@ import { apiPost } from '../lib/api'
 // ── Duration options ──────────────────────────────────────────
 const DURATION_OPTIONS = [
   { label: '1 Day', value: 1 },
+  { label: '2 Days', value: 2 },
   { label: '3 Days', value: 3 },
-  { label: '5 Days', value: 5 },
-  { label: '7 Days', value: 7 },
-  { label: '10 Days', value: 10 },
-  { label: '14 Days', value: 14 },
-  { label: '21 Days', value: 21 },
-  { label: '30 Days', value: 30 },
 ]
 
 // ── Preset categories ─────────────────────────────────────────
@@ -147,7 +142,7 @@ export default function SellerCreateAuction() {
   const [formData, setFormData] = useState({
     title: '', category: '', description: '',
     startingBid: '', minIncrement: '100',
-    startsAt: '', durationDays: '7',
+    startsAt: '', durationDays: '3',
     condition: '', shipping: '', returns: '',
   })
   const handleChange = (e) => setFormData(f => ({ ...f, [e.target.name]: e.target.value }))
@@ -234,7 +229,12 @@ export default function SellerCreateAuction() {
       }
 
       // ── Step 2: Create auction with Cloudinary CDN URLs ──────────────
-      const res = await apiPost('/api/seller/auctions', { ...formData, images: cdnUrls }, token)
+      const payload = { ...formData, images: cdnUrls };
+      if (payload.startsAt) {
+        payload.startsAt = new Date(payload.startsAt).toISOString();
+      }
+
+      const res = await apiPost('/api/seller/auctions', payload, token)
       const d = res.data
 
       if (res.ok && d.success) {
@@ -351,7 +351,7 @@ export default function SellerCreateAuction() {
                 <FieldGroup label="Min. Bid Increment (₹)" hint="Minimum raise per bid">
                   <input type="number" min="100" name="minIncrement" value={formData.minIncrement} onChange={handleChange} placeholder="e.g., 1000" className={inputCls} />
                 </FieldGroup>
-                <FieldGroup label="Auction Start (Scheduled)" icon={Calendar} hint={formData.startsAt ? "Scheduled to start at the selected time. Auction will run for 7 days." : "Leave empty to start immediately (2-hour duration)."}>
+                <FieldGroup label="Auction Start (Scheduled)" icon={Calendar} hint={formData.startsAt ? `Scheduled to start at the selected time. Auction will run for ${formData.durationDays} days.` : `Leave empty to start immediately (${formData.durationDays}-day duration).`}>
                   <div className="relative">
                     <input
                       type="datetime-local"
@@ -359,16 +359,16 @@ export default function SellerCreateAuction() {
                       value={formData.startsAt}
                       onChange={handleChange}
                       min={new Date().toISOString().slice(0, 16)}
-                      className={`${inputCls} [color-scheme:dark] relative z-10 ${!formData.startsAt ? 'text-transparent' : 'text-slate-900 dark:text-white'}`}
+                      className={`${inputCls} [color-scheme:dark] w-full`}
                     />
-                    {!formData.startsAt && (
-                      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none z-20">
-                        <span className="text-sm font-bold text-blue-500 flex items-center gap-2">
-                          <Zap className="w-3.5 h-3.5" /> Launch Immediately (2h)
-                        </span>
-                      </div>
-                    )}
                   </div>
+                </FieldGroup>
+                <FieldGroup label="Duration" icon={Clock} hint="Maximum duration is 3 days.">
+                  <select name="durationDays" value={formData.durationDays} onChange={handleChange} className={inputCls}>
+                    {DURATION_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
                 </FieldGroup>
               </div>
             </Section>

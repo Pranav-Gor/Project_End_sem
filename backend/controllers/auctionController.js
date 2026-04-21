@@ -44,7 +44,8 @@ function mapDetail(doc) {
     authenticity: doc.authenticity,
     shipping: doc.shipping,
     returns: doc.returns,
-    specifications: doc.specifications || []
+    specifications: doc.specifications || [],
+    watchersList: (doc.watchersList || []).map(id => id.toString())
   };
 }
 
@@ -53,7 +54,9 @@ function mapDetail(doc) {
  */
 exports.getLiveAuctions = async (req, res) => {
   try {
-    const rows = await Auction.find({ status: 'live' })
+    const now = new Date();
+    // Ensure we only fetch auctions whose endsAt is strictly in the future.
+    const rows = await Auction.find({ status: 'live', endsAt: { $gt: now } })
       .sort({ endsAt: 1 })
       .lean();
 
@@ -80,6 +83,49 @@ exports.getLiveAuctions = async (req, res) => {
   } catch (e) {
     console.error('getLiveAuctions', e);
     res.status(500).json({ success: false, message: 'Failed to load auctions' });
+  }
+};
+
+/**
+ * GET /api/auctions/closed
+ * Public/Protected — returns auctions that have ended
+ */
+exports.getClosedAuctions = async (req, res) => {
+  try {
+    const now = new Date();
+    const rows = await Auction.find({
+      $or: [
+        { status: 'closed' },
+        { status: 'live', endsAt: { $lte: now } }
+      ]
+    })
+      .sort({ endsAt: -1 })
+      .lean();
+
+    const auctions = rows.map((a) => {
+      const winnerName = a.bids && a.bids.length > 0 ? a.bids[a.bids.length - 1].bidderName : 'No Winner';
+      return {
+        id: a.auctionId,
+        title: a.title,
+        category: a.category,
+        image: a.images?.[0] || '',
+        finalBid: a.currentBid || a.startingBid,
+        totalBids: a.bidCount || 0,
+        soldDate: a.endsAt,
+        winner: winnerName,
+        seller: a.seller?.name || 'Unknown',
+        sellerRating: a.seller?.rating || 0,
+        views: a.watchers || 0
+      };
+    });
+
+    res.json({
+      success: true,
+      data: { auctions }
+    });
+  } catch (e) {
+    console.error('getClosedAuctions Error:', e);
+    res.status(500).json({ success: false, message: 'Failed to load closed auctions' });
   }
 };
 
@@ -161,10 +207,10 @@ exports.getUpcomingAuctions = async (req, res) => {
     });
   } catch (e) {
     console.error('getUpcomingAuctions Error:', e.stack || e);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: 'Failed to load upcoming auctions',
-      error: process.env.NODE_ENV === 'development' ? e.message : undefined 
+      error: process.env.NODE_ENV === 'development' ? e.message : undefined
     });
   }
 };
@@ -213,14 +259,27 @@ exports.placeBid = async (req, res) => {
 
     const auctionId = parseInt(req.params.auctionId, 10);
     const amount = Number(req.body.amount);
+    const userId = req.user.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Require an address before bidding
+    if (!user.profile?.address?.street || !user.profile?.address?.city || !user.profile?.address?.zipCode) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please update your address in your Profile before placing a bid. This ensures sellers know where to ship your won items.',
+        code: 'MISSING_ADDRESS'
+      });
+    }
+
     if (Number.isNaN(auctionId) || !Number.isFinite(amount) || amount <= 0) {
       return res.status(400).json({ success: false, message: 'Invalid auction or bid amount' });
     }
 
-    const bidder = await User.findById(req.user.userId);
-    if (!bidder) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
+    const bidder = user;
 
     const auction = await Auction.findOne({ auctionId });
     if (!auction) {
@@ -299,17 +358,39 @@ exports.placeBid = async (req, res) => {
       hour: '2-digit',
       minute: '2-digit'
     });
-    auction.bids.push({
+
+    const newBidObj = {
       bidderName: bidder.name || 'Bidder',
       bidderUserId: bidder._id,
       amount,
       timeLabel
-    });
+    };
+
+    auction.bids.push(newBidObj);
     auction.currentBid = amount;
     auction.bidCount = (auction.bidCount || 0) + 1;
     await auction.save();
 
     const lean = await Auction.findOne({ auctionId }).lean();
+
+    // Broadcast optimized update to connected clients
+    try {
+      const { getIO } = require('../socket');
+      // Format the bid object to match frontend expectations
+      const frontendBid = {
+        id: auction.bids[auction.bids.length - 1]._id?.toString() || String(Math.random()),
+        bidder: newBidObj.bidderName,
+        amount: newBidObj.amount,
+        time: newBidObj.timeLabel
+      };
+      getIO().to(`auction_${auctionId}`).emit('new_bid', {
+        newBid: frontendBid,
+        currentBid: auction.currentBid,
+        bidCount: auction.bidCount
+      });
+    } catch (err) {
+      console.error('Socket emission failed:', err);
+    }
 
     return res.status(201).json({
       success: true,
@@ -322,5 +403,274 @@ exports.placeBid = async (req, res) => {
   } catch (e) {
     console.error('placeBid', e);
     return res.status(500).json({ success: false, message: 'Failed to place bid' });
+  }
+};
+
+/**
+ * POST /api/auctions/:auctionId/notify
+ * Toggle user in watchersList for an upcoming auction.
+ */
+exports.toggleNotifyMe = async (req, res) => {
+  try {
+    const auctionId = parseInt(req.params.auctionId, 10);
+    const userId = req.user.userId;
+
+    if (Number.isNaN(auctionId)) {
+      return res.status(400).json({ success: false, message: 'Invalid auction id' });
+    }
+
+    const auction = await Auction.findOne({ auctionId });
+    if (!auction) {
+      return res.status(404).json({ success: false, message: 'Auction not found' });
+    }
+
+    if (auction.status !== 'upcoming') {
+      return res.status(400).json({ success: false, message: 'Can only watch upcoming auctions' });
+    }
+
+    const userObjId = await User.findOne({ userId }).select('_id');
+    if (!userObjId) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    let isWatching = false;
+    const watcherIndex = auction.watchersList.indexOf(userObjId._id);
+
+    if (watcherIndex > -1) {
+      auction.watchersList.splice(watcherIndex, 1);
+      auction.watchers = Math.max(0, auction.watchers - 1);
+      isWatching = false;
+    } else {
+      auction.watchersList.push(userObjId._id);
+      auction.watchers += 1;
+      isWatching = true;
+    }
+
+    await auction.save();
+
+    res.json({
+      success: true,
+      message: isWatching ? 'You will be notified when this auction starts' : 'Notification removed',
+      data: { isWatching, watchersCount: auction.watchers }
+    });
+  } catch (error) {
+    console.error('toggleNotifyMe error:', error);
+    res.status(500).json({ success: false, message: 'Server error toggling notification.' });
+  }
+};
+
+/**
+ * GET /api/auctions/:id/contact-info
+ * For a closed auction, returns the contact info of the seller to the winner, and winner to the seller.
+ */
+exports.getAuctionContactInfo = async (req, res) => {
+  try {
+    const auction = await Auction.findOne({ auctionId: req.params.id })
+      .populate('seller.sellerUserId', 'name email profile.phone')
+      .populate('bids.bidderUserId', 'name email profile.phone');
+
+    if (!auction) return res.status(404).json({ success: false, message: 'Not found' });
+    if (auction.status !== 'closed') return res.status(400).json({ success: false, message: 'Auction not closed yet' });
+
+    const winningBid = auction.bids.length > 0 ? auction.bids[auction.bids.length - 1] : null;
+    if (!winningBid) return res.status(400).json({ success: false, message: 'No bids' });
+
+    const isSeller = auction.seller.sellerUserId && auction.seller.sellerUserId._id.toString() === req.user._id.toString();
+    const isWinner = winningBid.bidderUserId && winningBid.bidderUserId._id.toString() === req.user._id.toString();
+
+    if (isSeller) {
+      return res.json({
+        success: true,
+        data: {
+          role: 'seller',
+          winner: {
+            name: winningBid.bidderUserId.name,
+            email: winningBid.bidderUserId.email,
+            phone: winningBid.bidderUserId.profile?.phone || 'Not provided'
+          },
+          winningBid: winningBid.amount
+        }
+      });
+    }
+
+    if (isWinner) {
+      return res.json({
+        success: true,
+        data: {
+          role: 'winner',
+          seller: {
+            name: auction.seller.sellerUserId.name,
+            email: auction.seller.sellerUserId.email,
+            phone: auction.seller.sellerUserId.profile?.phone || 'Not provided'
+          },
+          winningBid: winningBid.amount
+        }
+      });
+    }
+
+    return res.status(403).json({ success: false, message: 'Not authorized to view contact info' });
+
+  } catch (error) {
+    console.error('getAuctionContactInfo error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+/**
+ * GET /api/auctions/notifications/pending
+ * Returns unacknowledged won and sold auctions for the logged-in user.
+ */
+exports.getPendingNotifications = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Seller not notified:
+    const soldAuctions = await Auction.find({
+      status: 'closed',
+      'seller.sellerUserId': userId,
+      sellerNotified: false
+    }).populate('bids.bidderUserId', 'name email profile.phone').lean();
+
+    // Winner not notified:
+    // We fetch all where winnerNotified = false and then filter to those where this user won
+    const potentialWonAuctions = await Auction.find({
+      status: 'closed',
+      winnerNotified: false
+    }).populate('seller.sellerUserId', 'name email profile.phone').lean();
+
+    const wonAuctions = potentialWonAuctions.filter(a => {
+      if (a.bids && a.bids.length > 0) {
+        const lastBid = a.bids[a.bids.length - 1];
+        return lastBid.bidderUserId && lastBid.bidderUserId._id.toString() === userId.toString();
+      }
+      return false;
+    });
+
+    res.json({
+      success: true,
+      data: {
+        sold: soldAuctions.map(a => {
+          const winningBid = a.bids.length > 0 ? a.bids[a.bids.length - 1] : null;
+          return {
+            auctionId: a.auctionId,
+            title: a.title,
+            finalBid: winningBid ? winningBid.amount : a.startingBid,
+            winner: winningBid && winningBid.bidderUserId ? {
+              name: winningBid.bidderUserId.name,
+              email: winningBid.bidderUserId.email,
+              phone: winningBid.bidderUserId.profile?.phone || 'Not provided'
+            } : null
+          };
+        }),
+        won: wonAuctions.map(a => {
+          const winningBid = a.bids[a.bids.length - 1];
+          return {
+            auctionId: a.auctionId,
+            title: a.title,
+            finalBid: winningBid.amount,
+            seller: a.seller.sellerUserId ? {
+              name: a.seller.sellerUserId.name,
+              email: a.seller.sellerUserId.email,
+              phone: a.seller.sellerUserId.profile?.phone || 'Not provided'
+            } : null
+          };
+        })
+      }
+    });
+
+  } catch (e) {
+    console.error('getPendingNotifications', e);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+/**
+ * POST /api/auctions/notifications/mark-read
+ * Body: { type: 'winner' | 'seller', auctionId }
+ */
+exports.markNotificationRead = async (req, res) => {
+  try {
+    const { type, auctionId } = req.body;
+    const updateField = type === 'seller' ? { sellerNotified: true } : { winnerNotified: true };
+    await Auction.updateOne({ auctionId }, { $set: updateField });
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false });
+  }
+};
+
+/**
+ * GET /api/auctions/my-bids
+ * Protected - fetch auctions the user has bid on with their highest bid and current status
+ */
+exports.getMyBids = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    // Find all auctions where the user has placed at least one bid
+    const auctions = await Auction.find({ 'bids.bidderUserId': userId }).lean();
+
+    const now = Date.now();
+
+    const myBidsData = auctions.map(a => {
+      const isClosed = a.status === 'closed' || new Date(a.endsAt).getTime() <= now;
+
+      // Find user's highest bid
+      const userBids = (a.bids || []).filter(b => b.bidderUserId && b.bidderUserId.toString() === userId.toString());
+      const myMaxBid = userBids.length > 0 ? Math.max(...userBids.map(b => b.amount)) : 0;
+
+      // Check if user is the current top bidder
+      const isTopBidder = myMaxBid >= (a.currentBid || 0) && userBids.some(b => b.amount === a.currentBid);
+
+      let status;
+      if (isClosed) {
+        if (a.winner && String(a.winner) === String(userId)) {
+          status = 'won';
+        } else if (isTopBidder) {
+          status = 'won'; // Fallback if winner isn't explicitly set yet
+        } else {
+          status = 'lost';
+        }
+      } else {
+        if (isTopBidder) {
+          status = 'winning';
+        } else {
+          status = 'outbid';
+        }
+      }
+
+      const msLeft = new Date(a.endsAt).getTime() - now;
+      let timeLeft = null;
+      if (!isClosed && msLeft > 0) {
+        const totalSec = Math.floor(msLeft / 1000);
+        timeLeft = {
+          hours: Math.floor(totalSec / 3600),
+          minutes: Math.floor((totalSec % 3600) / 60)
+        };
+      }
+
+      let endDate = null;
+      if (isClosed) {
+        endDate = new Date(a.endsAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      }
+
+      return {
+        id: a.auctionId,
+        title: a.title,
+        category: a.category,
+        image: a.images?.[0] || '',
+        myBid: myMaxBid,
+        currentBid: a.currentBid || 0,
+        status,
+        timeLeft,
+        endDate,
+        seller: a.seller?.name || 'Unknown',
+        bids: a.bids?.length || 0
+      };
+    });
+
+    res.json({ success: true, data: myBidsData });
+  } catch (error) {
+    console.error('Failed to fetch my bids:', error);
+    res.status(500).json({ success: false, message: 'Server error fetching bids' });
   }
 };

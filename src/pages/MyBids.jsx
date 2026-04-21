@@ -8,69 +8,30 @@ import {
   Sun, Moon, LogOut, LayoutDashboard, DollarSign
 } from 'lucide-react'
 
-// Mock user bids data
-const myBidsData = [
-  {
-    id: 1,
-    title: "Vintage Rolex Submariner 1967",
-    category: "Collectibles",
-    image: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=400&h=300&fit=crop",
-    myBid: 28500,
-    currentBid: 29000,
-    status: 'outbid',
-    timeLeft: { hours: 2, minutes: 15 },
-    seller: "EliteTimepieces",
-    bids: 45
-  },
-  {
-    id: 3,
-    title: "Gaming PC RTX 4090 Setup",
-    category: "Electronics",
-    image: "https://images.unsplash.com/photo-1587202372634-32705e3e568e?w=400&h=300&fit=crop",
-    myBid: 3200,
-    currentBid: 3200,
-    status: 'winning',
-    timeLeft: { hours: 4, minutes: 30 },
-    seller: "TechDeals",
-    bids: 28
-  },
-  {
-    id: 12,
-    title: "Limited Edition Sneakers",
-    category: "Collectibles",
-    image: "https://images.unsplash.com/photo-1556906781-9a412961c28c?w=400&h=300&fit=crop",
-    myBid: 2800,
-    currentBid: 2800,
-    status: 'won',
-    endDate: "Mar 27, 2026",
-    seller: "KicksEmporium"
-  },
-  {
-    id: 15,
-    title: "Vintage Wine Collection",
-    category: "Collectibles",
-    image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400&h=300&fit=crop",
-    myBid: 4500,
-    currentBid: 5600,
-    status: 'lost',
-    endDate: "Mar 25, 2026",
-    seller: "FineWineCellar"
-  }
-]
-
-const notificationsData = [
-  { id: 1, title: 'You were outbid!', message: 'On Vintage Rolex', time: '2 min ago', read: false },
-  { id: 2, title: 'Auction ending soon', message: 'Gaming PC ends in 30 min', time: '1 hour ago', read: false }
-]
+import { apiGet } from '../lib/api'
 
 export default function MyBids() {
   const navigate = useNavigate()
   const { addToast } = useToast()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [notifications, setNotifications] = useState(notificationsData)
   const [showNotifications, setShowNotifications] = useState(false)
   const [activeTab, setActiveTab] = useState('active')
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
+  const [bidsData, setBidsData] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchBids = async () => {
+      setLoading(true)
+      const token = localStorage.getItem('accessToken')
+      const { ok, data } = await apiGet('/api/auctions/my-bids', token)
+      if (ok && data?.success) {
+        setBidsData(data.data)
+      }
+      setLoading(false)
+    }
+    fetchBids()
+  }, [])
 
   useEffect(() => {
     if (theme === 'dark') document.documentElement.classList.add('dark')
@@ -79,9 +40,8 @@ export default function MyBids() {
   }, [theme])
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light')
-  const unreadCount = notifications.filter(n => !n.read).length
 
-  const filteredBids = myBidsData.filter(bid => {
+  const filteredBids = bidsData.filter(bid => {
     if (activeTab === 'active') return bid.status === 'winning' || bid.status === 'outbid'
     if (activeTab === 'won') return bid.status === 'won'
     if (activeTab === 'lost') return bid.status === 'lost'
@@ -89,10 +49,10 @@ export default function MyBids() {
   })
 
   const stats = {
-    active: myBidsData.filter(b => b.status === 'winning' || b.status === 'outbid').length,
-    winning: myBidsData.filter(b => b.status === 'winning').length,
-    won: myBidsData.filter(b => b.status === 'won').length,
-    lost: myBidsData.filter(b => b.status === 'lost').length
+    active: bidsData.filter(b => b.status === 'winning' || b.status === 'outbid').length,
+    winning: bidsData.filter(b => b.status === 'winning').length,
+    won: bidsData.filter(b => b.status === 'won').length,
+    lost: bidsData.filter(b => b.status === 'lost').length
   }
 
   return (
@@ -120,25 +80,7 @@ export default function MyBids() {
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
 
-              <div className="relative">
-                <button onClick={() => setShowNotifications(!showNotifications)} className="relative p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                  <Bell className="w-5 h-5" />
-                  {unreadCount > 0 && <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">{unreadCount}</span>}
-                </button>
-                {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden z-50">
-                    <div className="p-3 border-b border-slate-100 dark:border-white/5">
-                      <h3 className="font-semibold text-slate-900 dark:text-white">Notifications</h3>
-                    </div>
-                    {notifications.map(n => (
-                      <div key={n.id} className={`p-3 border-b border-slate-100 dark:border-white/5 ${!n.read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}>
-                        <p className="text-sm font-medium text-slate-900 dark:text-white">{n.title}</p>
-                        <p className="text-xs text-slate-500">{n.message}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+
 
               <div className="flex items-center gap-2">
                 <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
@@ -207,7 +149,12 @@ export default function MyBids() {
 
       {/* Bids List */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {filteredBids.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-16">
+            <div className="w-10 h-10 border-4 border-auctus-teal border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-slate-500">Loading your bids...</p>
+          </div>
+        ) : filteredBids.length === 0 ? (
           <div className="text-center py-16">
             <Gavel className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No bids found</h3>
@@ -232,13 +179,21 @@ export default function MyBids() {
                   </div>
                   <h3 className="font-semibold text-slate-900 dark:text-white truncate">{bid.title}</h3>
                   <p className="text-sm text-slate-500">{bid.seller}</p>
-                  {(bid.status === 'winning' || bid.status === 'outbid') && (
+                  {(bid.status === 'winning' || bid.status === 'outbid') && bid.timeLeft && (
                     <div className="flex items-center gap-4 mt-2 text-sm">
                       <span className="flex items-center gap-1 text-slate-500">
                         <Clock className="w-3 h-3" />
                         {String(bid.timeLeft.hours).padStart(2, '0')}:{String(bid.timeLeft.minutes).padStart(2, '0')} left
                       </span>
                       <span className="text-slate-500">{bid.bids} bids</span>
+                    </div>
+                  )}
+                  {(bid.status === 'won' || bid.status === 'lost') && bid.endDate && (
+                    <div className="flex items-center gap-4 mt-2 text-sm">
+                      <span className="flex items-center gap-1 text-slate-500">
+                        Ended: {bid.endDate}
+                      </span>
+                      <span className="text-slate-500">{bid.bids} total bids</span>
                     </div>
                   )}
                 </div>
@@ -257,20 +212,15 @@ export default function MyBids() {
                 </div>
 
                 <div className="flex gap-2">
-                  {(bid.status === 'winning' || bid.status === 'outbid') && (
+                  {bid.status === 'won' && (
                     <button 
-                      onClick={() => addToast(`Bid increased on ${bid.title}`, 'success')}
-                      className="px-4 py-2 bg-gradient-to-r from-auctus-teal to-auctus-cyan text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all"
+                      onClick={() => addToast(`Seller: ${bid.seller}. They will contact you shortly!`, 'success')}
+                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all"
                     >
-                      Bid Higher
+                      <User className="w-4 h-4" />
+                      Contact Seller
                     </button>
                   )}
-                  <button 
-                    onClick={() => navigate(`/auction/${bid.id}`)}
-                    className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                  >
-                    <Eye className="w-5 h-5" />
-                  </button>
                 </div>
               </div>
             ))}

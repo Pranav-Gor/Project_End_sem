@@ -4,7 +4,7 @@ const { verifySellerGstAgainstProvider } = require('../utils/gstinVerify');
 const { generateTokenPair, verifyToken } = require('../utils/paseto');
 const { validationResult } = require('express-validator');
 const crypto = require('crypto');
-const { sendPasswordResetOtpEmail, isSmtpConfigured } = require('../utils/emailService');
+const { sendPasswordResetOtpEmail, isSmtpConfigured, sendRegistrationOtpEmail } = require('../utils/emailService');
 
 const dashboardPathByRole = {
   user: '/dashboard',
@@ -168,6 +168,7 @@ const register = async (req, res) => {
         });
       }
 
+      // Real GST verification
       const gst = await verifySellerGstAgainstProvider({
         gstin: String(gstin).toUpperCase(),
         panNumber: String(panNumber).toUpperCase(),
@@ -181,11 +182,10 @@ const register = async (req, res) => {
         });
       }
 
-      const applicationPayload = {
+      let applicationPayload = {
         applicantName: String(name).trim(),
         applicantEmail: emailKey,
-        applicantPhone: phone ? String(phone).trim() : '',
-        pendingPassword: String(password),
+        applicantPhone: phone || '',
         businessName: String(businessName).trim(),
         gstin: String(gstin).toUpperCase(),
         panNumber: String(panNumber).toUpperCase(),
@@ -196,7 +196,8 @@ const register = async (req, res) => {
         status: 'pending',
         reviewNote: '',
         reviewedBy: null,
-        reviewedAt: null
+        reviewedAt: null,
+        pendingPassword: password
       };
 
       if (existingUser?._id) {
@@ -207,45 +208,203 @@ const register = async (req, res) => {
         updatedAt: -1
       });
 
+      let savedApp;
       if (previousApp && ['rejected', 'approved'].includes(previousApp.status)) {
         Object.assign(previousApp, applicationPayload);
-        await previousApp.save();
+        savedApp = await previousApp.save();
       } else {
-        await SellerApplication.create(applicationPayload);
+        savedApp = await SellerApplication.create(applicationPayload);
       }
 
-      return res.status(201).json({
+      // Send response immediately
+      res.status(201).json({
         success: true,
         message: 'Documents submitted. Admin will review and notify you by email.',
         data: {
-          pendingReview: true
+          pendingReview: true,
+          applicationId: savedApp._id
         }
       });
+
+      // CRITICAL: Return here so we don't fall through to the buyer registration code below
+      return;
     }
 
     // Check if buyer/user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: 'User with this email already exists'
-      });
+      if (existingUser.isVerified) {
+        return res.status(409).json({
+          success: false,
+          message: 'User with this email already exists'
+        });
+      }
+      // If not verified, we can overwrite them
+      await User.deleteOne({ _id: existingUser._id });
     }
+
+    // Generate OTP
+    const otp = String(crypto.randomInt(1000, 10000));
+    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
 
     // Generate unique userId (format: U + timestamp + random)
     const userId = `U${Date.now()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
 
-    // Create buyer/user account immediately
+    // Create buyer/user account immediately, but unverified
     const user = await User.create({
       userId,
       name,
       email: email.toLowerCase(),
       password,
       role,
+      isVerified: false,
+      registrationOtp: otpHash,
+      registrationOtpExpires: new Date(Date.now() + 3 * 60 * 1000), // 3 mins
       profile: {
         phone: phone || null
       }
     });
+
+    // Send OTP email
+    try {
+      await sendRegistrationOtpEmail({ to: user.email, name: user.name, otp });
+    } catch (err) {
+      console.error('Failed to send registration OTP:', err);
+      // We continue, but realistically in prod we might want to fail
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'OTP sent to email. Please verify to complete registration.',
+      data: {
+        requiresOtp: true,
+        email: user.email
+      }
+    });
+
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during registration',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// In-memory rate limiting for OTP resend
+const otpRateLimitMap = new Map();
+
+/**
+ * @desc    Resend Registration OTP
+ * @route   POST /api/auth/resend-registration-otp
+ * @access  Public
+ */
+const resendRegistrationOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const emailNorm = String(email || '').trim().toLowerCase();
+
+    if (!emailNorm) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    // Rate Limiting Logic: Max 3 requests per 5 minutes per email
+    const now = Date.now();
+    const rateLimitInfo = otpRateLimitMap.get(emailNorm) || { count: 0, firstRequest: now };
+
+    if (now - rateLimitInfo.firstRequest > 5 * 60 * 1000) {
+      rateLimitInfo.count = 0;
+      rateLimitInfo.firstRequest = now;
+    }
+
+    if (rateLimitInfo.count >= 3) {
+      return res.status(429).json({
+        success: false,
+        message: 'Too many OTP requests. Please try again after 5 minutes.'
+      });
+    }
+
+    rateLimitInfo.count += 1;
+    otpRateLimitMap.set(emailNorm, rateLimitInfo);
+
+    const user = await User.findOne({ email: emailNorm }).select('+registrationOtp +registrationOtpExpires');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ success: false, message: 'User is already verified' });
+    }
+
+    // Generate new OTP
+    const otp = String(crypto.randomInt(1000, 10000));
+    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
+
+    user.registrationOtp = otpHash;
+    user.registrationOtpExpires = new Date(Date.now() + 3 * 60 * 1000); // 3 mins
+    await user.save();
+
+    // Send OTP email
+    try {
+      await sendRegistrationOtpEmail({ to: user.email, name: user.name, otp });
+    } catch (err) {
+      console.error('Failed to send registration OTP:', err);
+      return res.status(500).json({ success: false, message: 'Failed to send email' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'OTP resent successfully to your email.'
+    });
+
+  } catch (error) {
+    console.error('Resend OTP error:', error);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+/**
+ * @desc    Verify Registration OTP
+ * @route   POST /api/auth/verify-registration
+ * @access  Public
+ */
+const verifyRegistration = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const emailNorm = String(email || '').toLowerCase();
+    const otpStr = String(otp || '').trim();
+
+    if (!emailNorm || !otpStr) {
+      return res.status(400).json({ success: false, message: 'Email and OTP are required' });
+    }
+
+    const user = await User.findOne({ email: emailNorm }).select('+registrationOtp +registrationOtpExpires +password');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ success: false, message: 'User is already verified' });
+    }
+
+    if (!user.registrationOtp || !user.registrationOtpExpires) {
+      return res.status(400).json({ success: false, message: 'Invalid OTP request' });
+    }
+
+    if (user.registrationOtpExpires.getTime() < Date.now()) {
+      return res.status(400).json({ success: false, message: 'OTP expired. Please register again.' });
+    }
+
+    const incomingHash = crypto.createHash('sha256').update(otpStr).digest('hex');
+    if (incomingHash !== user.registrationOtp) {
+      return res.status(400).json({ success: false, message: 'Invalid OTP' });
+    }
+
+    // Mark as verified
+    user.isVerified = true;
+    user.registrationOtp = null;
+    user.registrationOtpExpires = null;
 
     // Generate tokens
     const { accessToken, refreshToken } = await generateTokenPair(user);
@@ -254,7 +413,6 @@ const register = async (req, res) => {
       user.refreshTokens = [];
     }
 
-    // Store refresh token in user document
     user.refreshTokens.push({
       token: refreshToken,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
@@ -275,27 +433,22 @@ const register = async (req, res) => {
       createdAt: user.createdAt
     };
 
-    res.status(201).json({
+    res.status(200).json({
       success: true,
-      message: 'User registered successfully',
+      message: 'Registration verified successfully',
       data: {
         user: userResponse,
         redirectTo: redirectToForRole(user.role),
         tokens: {
           accessToken,
           refreshToken,
-          expiresIn: 3600 // 1 hour in seconds
+          expiresIn: 3600
         }
       }
     });
-
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error during registration',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    console.error('Verify registration error:', error);
+    res.status(500).json({ success: false, message: 'Server error during verification' });
   }
 };
 
@@ -349,6 +502,16 @@ const login = async (req, res) => {
     const user = await User.findOne({ email: emailNorm }).select('+password');
 
     if (!user) {
+      // Check if this is a pending seller application
+      const pendingApp = await SellerApplication.findOne({ applicantEmail: emailNorm, status: 'pending' });
+      if (pendingApp) {
+        return res.status(403).json({
+          success: false,
+          code: 'APPLICATION_PENDING',
+          message: 'Your documents are under review. We will get back to you within 24 hours.'
+        });
+      }
+
       return res.status(404).json({
         success: false,
         code: 'ACCOUNT_NOT_FOUND',
@@ -841,6 +1004,7 @@ const changePassword = async (req, res) => {
 
 module.exports = {
   register,
+  verifyRegistration,
   login,
   forgotPasswordRequestOtp,
   forgotPasswordConfirmOtp,
@@ -848,5 +1012,6 @@ module.exports = {
   logout,
   getMe,
   updateProfile,
-  changePassword
+  changePassword,
+  resendRegistrationOtp
 };

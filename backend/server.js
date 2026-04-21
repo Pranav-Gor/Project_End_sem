@@ -5,6 +5,9 @@ const connectDB = require('./config/db');
 const { isSmtpConfigured } = require('./utils/emailService');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const { razorpayWebhook } = require('./controllers/paymentController');
+const http = require('http');
+const { initSocket } = require('./socket');
+const { initCron } = require('./cron');
 
 // Load environment variables
 dotenv.config();
@@ -15,6 +18,15 @@ connectDB();
 // Initialize Express app
 const app = express();
 
+// Create HTTP server for Express and Socket.IO
+const server = http.createServer(app);
+
+// Initialize Socket.IO
+initSocket(server);
+
+// Initialize Cron Jobs
+initCron();
+
 // Razorpay webhook must see raw body for signature verification (before express.json)
 app.post(
   '/api/payments/razorpay-webhook',
@@ -23,8 +35,8 @@ app.post(
 );
 
 // Middleware (seller KYC docs are base64 data URLs, payloads can get large)
-app.use(express.json({ limit: '25mb' }));
-app.use(express.urlencoded({ extended: true, limit: '25mb' }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 // CORS configuration
 app.use(cors({
@@ -62,6 +74,7 @@ app.use('/api/analytics', require('./routes/analyticsRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/wallet', require('./routes/walletRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/newsletter', require('./routes/newsletterRoutes'));
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -80,7 +93,7 @@ app.use(errorHandler);
 // Start server
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`\n========================================`);
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`);

@@ -1,231 +1,130 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense, lazy } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import Auth from './pages/Auth'
-import ForgotPassword from './pages/ForgotPassword'
-import Home from './pages/Home'
-import LiveAuctions from './pages/LiveAuctions'
-import AuctionDetail from './pages/AuctionDetail'
-import UpcomingAuctions from './pages/UpcomingAuctions'
-import ClosedAuctions from './pages/ClosedAuctions'
-import MyBids from './pages/MyBids'
-import UserDashboard from './pages/UserDashboard'
-import SellerDashboard from './pages/SellerDashboard'
-import AdminDashboard from './pages/AdminDashboard'
-import UserProfile from './pages/UserProfile'
-import Wallet from './pages/Wallet'
-import Transactions from './pages/Transactions'
-import Reports from './pages/Reports'
-import Settings from './pages/Settings'
-import SupportCenter from './pages/SupportCenter'
-import SellerAuctions from './pages/SellerAuctions'
-import SellerCreateAuction from './pages/SellerCreateAuction'
-import SellerPayouts from './pages/SellerPayouts'
-import SellerKyc from './pages/SellerKyc'
-import NotFound from './pages/NotFound'
-import { RoleGuard, BuyerDashboardGuard, SellerVerifiedGuard, AuthGuard } from './components/RoleGuard'
 import { ThemeProvider } from './contexts/ThemeContext'
+import AuctionNotifications from './components/AuctionNotifications'
+import { RoleGuard, BuyerDashboardGuard, SellerVerifiedGuard, AuthGuard } from './components/RoleGuard'
 
-// Page transition wrapper
-function PageTransition({ children }) {
-  const location = useLocation()
-  
+// Lazy load components for better performance
+const Auth = lazy(() => import('./pages/Auth'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const Home = lazy(() => import('./pages/Home'))
+const LiveAuctions = lazy(() => import('./pages/LiveAuctions'))
+const AuctionDetail = lazy(() => import('./pages/AuctionDetail'))
+const UpcomingAuctions = lazy(() => import('./pages/UpcomingAuctions'))
+const ClosedAuctions = lazy(() => import('./pages/ClosedAuctions'))
+const Categories = lazy(() => import('./pages/Categories'))
+const Favorites = lazy(() => import('./pages/Favorites'))
+const MyBids = lazy(() => import('./pages/MyBids'))
+const UserDashboard = lazy(() => import('./pages/UserDashboard'))
+const SellerDashboard = lazy(() => import('./pages/SellerDashboard'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const UserProfile = lazy(() => import('./pages/UserProfile'))
+const Wallet = lazy(() => import('./pages/Wallet'))
+const Transactions = lazy(() => import('./pages/Transactions'))
+const Reports = lazy(() => import('./pages/Reports'))
+const Settings = lazy(() => import('./pages/Settings'))
+const SupportCenter = lazy(() => import('./pages/SupportCenter'))
+const SellerAuctions = lazy(() => import('./pages/SellerAuctions'))
+const SellerCreateAuction = lazy(() => import('./pages/SellerCreateAuction'))
+const SellerPayouts = lazy(() => import('./pages/SellerPayouts'))
+const SellerKyc = lazy(() => import('./pages/SellerKyc'))
+const SellerSettings = lazy(() => import('./pages/SellerSettings'))
+const NotFound = lazy(() => import('./pages/NotFound'))
+
+// Page transition configuration
+const pageVariants = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -10 },
+  transition: { duration: 0.3, ease: "easeOut" }
+}
+
+function PageWrapper({ children, variants = pageVariants }) {
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={location.pathname}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-      >
+    <motion.div {...variants}>
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 transition-colors">
+          <div className="w-10 h-10 border-4 border-auctus-teal border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      }>
         {children}
-      </motion.div>
-    </AnimatePresence>
+      </Suspense>
+    </motion.div>
   )
 }
 
-// Animated routes component
 function AnimatedRoutes() {
   const location = useLocation()
-  
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-            <Home />
-          </motion.div>
-        } />
-        <Route path="/home" element={
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-            <Home />
-          </motion.div>
-        } />
-        <Route path="/auth" element={
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.4, ease: "easeOut" }}>
-            <Auth />
-          </motion.div>
-        } />
-        <Route path="/auth/forgot-password" element={
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.4, ease: "easeOut" }}>
-            <ForgotPassword />
-          </motion.div>
-        } />
-        <Route path="/live-auctions" element={
-          <AuthGuard>
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-              <LiveAuctions />
-            </motion.div>
-          </AuthGuard>
-        } />
-        <Route path="/auction/:id" element={
-          <AuthGuard>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-              <AuctionDetail />
-            </motion.div>
-          </AuthGuard>
-        } />
-        <Route path="/upcoming-auctions" element={
-          <AuthGuard>
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-              <UpcomingAuctions />
-            </motion.div>
-          </AuthGuard>
-        } />
-        <Route path="/closed-auctions" element={
-          <AuthGuard>
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-              <ClosedAuctions />
-            </motion.div>
-          </AuthGuard>
-        } />
-        <Route path="/my-bids" element={
-          <AuthGuard>
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-              <MyBids />
-            </motion.div>
-          </AuthGuard>
-        } />
+        {/* Public Routes */}
+        <Route path="/" element={<PageWrapper><Home /></PageWrapper>} />
+        <Route path="/home" element={<Navigate to="/" replace />} />
+        <Route path="/auth" element={<PageWrapper variants={{ initial: { opacity: 0, scale: 0.98 }, animate: { opacity: 1, scale: 1 }, exit: { opacity: 0, scale: 0.98 }, transition: { duration: 0.4 } }}><Auth /></PageWrapper>} />
+        <Route path="/auth/forgot-password" element={<PageWrapper><ForgotPassword /></PageWrapper>} />
+        
+        {/* Protected Marketplace Routes */}
+        <Route path="/live-auctions" element={<AuthGuard><PageWrapper><LiveAuctions /></PageWrapper></AuthGuard>} />
+        <Route path="/auction/:id" element={<AuthGuard><PageWrapper><AuctionDetail /></PageWrapper></AuthGuard>} />
+        <Route path="/upcoming-auctions" element={<AuthGuard><PageWrapper><UpcomingAuctions /></PageWrapper></AuthGuard>} />
+        <Route path="/closed-auctions" element={<AuthGuard><PageWrapper><ClosedAuctions /></PageWrapper></AuthGuard>} />
+        <Route path="/categories" element={<AuthGuard><PageWrapper><Categories /></PageWrapper></AuthGuard>} />
+        <Route path="/favorites" element={<AuthGuard><PageWrapper><Favorites /></PageWrapper></AuthGuard>} />
+        <Route path="/my-bids" element={<AuthGuard><PageWrapper><MyBids /></PageWrapper></AuthGuard>} />
 
         {/* Dashboards */}
-        <Route path="/dashboard" element={
-          <BuyerDashboardGuard>
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.3 }}>
-              <UserDashboard />
-            </motion.div>
-          </BuyerDashboardGuard>
-        } />
-        {/* Alias: same buyer dashboard (some links use /dashboard/user) */}
-        <Route path="/dashboard/user" element={
-          <BuyerDashboardGuard>
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.3 }}>
-              <UserDashboard />
-            </motion.div>
-          </BuyerDashboardGuard>
-        } />
+        <Route path="/dashboard" element={<BuyerDashboardGuard><PageWrapper><UserDashboard /></PageWrapper></BuyerDashboardGuard>} />
+        <Route path="/dashboard/user" element={<Navigate to="/dashboard" replace />} />
+        
         <Route path="/seller/dashboard" element={
           <RoleGuard allowedRoles={['seller', 'admin']}>
-            <SellerVerifiedGuard>
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.3 }}>
-                <SellerDashboard />
-              </motion.div>
-            </SellerVerifiedGuard>
+            <SellerVerifiedGuard><PageWrapper><SellerDashboard /></PageWrapper></SellerVerifiedGuard>
           </RoleGuard>
         } />
-        <Route path="/seller/kyc" element={
-          <RoleGuard allowedRoles={['seller', 'admin']}>
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.3 }}>
-              <SellerKyc />
-            </motion.div>
-          </RoleGuard>
-        } />
+        
         <Route path="/admin/dashboard" element={
           <RoleGuard allowedRoles={['admin']}>
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.3 }}>
-              <AdminDashboard />
-            </motion.div>
+            <PageWrapper><AdminDashboard /></PageWrapper>
           </RoleGuard>
         } />
 
-        {/* Account & analytics */}
-        <Route path="/profile" element={
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
-            <UserProfile />
-          </motion.div>
-        } />
-        <Route path="/wallet" element={
-          <AuthGuard>
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
-              <Wallet />
-            </motion.div>
-          </AuthGuard>
-        } />
-        <Route path="/transactions" element={
-          <AuthGuard>
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
-              <Transactions />
-            </motion.div>
-          </AuthGuard>
-        } />
-        <Route path="/reports" element={
-          <RoleGuard allowedRoles={['admin']}>
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
-              <Reports />
-            </motion.div>
-          </RoleGuard>
-        } />
-        <Route path="/settings" element={
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
-            <Settings />
-          </motion.div>
-        } />
-        <Route path="/support" element={
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
-            <SupportCenter />
-          </motion.div>
-        } />
+        {/* Shared User Routes */}
+        <Route path="/profile" element={<AuthGuard><PageWrapper><UserProfile /></PageWrapper></AuthGuard>} />
+        <Route path="/wallet" element={<AuthGuard><PageWrapper><Wallet /></PageWrapper></AuthGuard>} />
+        <Route path="/transactions" element={<AuthGuard><PageWrapper><Transactions /></PageWrapper></AuthGuard>} />
+        <Route path="/settings" element={<AuthGuard><PageWrapper><Settings /></PageWrapper></AuthGuard>} />
+        <Route path="/support" element={<PageWrapper><SupportCenter /></PageWrapper>} />
 
-        {/* Seller tools */}
+        {/* Admin Tools */}
+        <Route path="/reports" element={<RoleGuard allowedRoles={['admin']}><PageWrapper><Reports /></PageWrapper></RoleGuard>} />
+
+        {/* Seller Specific Tools */}
+        <Route path="/seller/kyc" element={<RoleGuard allowedRoles={['seller', 'admin']}><PageWrapper><SellerKyc /></PageWrapper></RoleGuard>} />
+        <Route path="/seller/settings" element={<RoleGuard allowedRoles={['seller', 'admin']}><PageWrapper><SellerSettings /></PageWrapper></RoleGuard>} />
         <Route path="/seller/auctions" element={
           <RoleGuard allowedRoles={['seller', 'admin']}>
-            <SellerVerifiedGuard>
-              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
-                <SellerAuctions />
-              </motion.div>
-            </SellerVerifiedGuard>
+            <SellerVerifiedGuard><PageWrapper><SellerAuctions /></PageWrapper></SellerVerifiedGuard>
           </RoleGuard>
         } />
         <Route path="/seller/auctions/new" element={
           <RoleGuard allowedRoles={['seller', 'admin']}>
-            <SellerVerifiedGuard>
-              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
-                <SellerCreateAuction />
-              </motion.div>
-            </SellerVerifiedGuard>
+            <SellerVerifiedGuard><PageWrapper><SellerCreateAuction /></PageWrapper></SellerVerifiedGuard>
           </RoleGuard>
         } />
         <Route path="/seller/payouts" element={
           <RoleGuard allowedRoles={['seller', 'admin']}>
-            <SellerVerifiedGuard>
-              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
-                <SellerPayouts />
-              </motion.div>
-            </SellerVerifiedGuard>
+            <SellerVerifiedGuard><PageWrapper><SellerPayouts /></PageWrapper></SellerVerifiedGuard>
           </RoleGuard>
         } />
-        {/* Legacy routes redirect to new unified auth page */}
+
+        {/* Redirects & 404 */}
         <Route path="/login" element={<Navigate to="/auth" replace />} />
         <Route path="/register" element={<Navigate to="/auth" replace />} />
         <Route path="/forgot-password" element={<Navigate to="/auth/forgot-password" replace />} />
-        <Route path="/categories" element={<Navigate to="/" replace />} />
-        <Route path="/favorites" element={<Navigate to="/" replace />} />
-
-        <Route path="*" element={
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
-            <NotFound />
-          </motion.div>
-        } />
+        <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   )
@@ -236,6 +135,7 @@ function App() {
     <ThemeProvider>
       <Router>
         <AnimatedRoutes />
+        <AuctionNotifications />
       </Router>
     </ThemeProvider>
   )

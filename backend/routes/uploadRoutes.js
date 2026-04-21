@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const { protectAllowInactive } = require('../middleware/auth');
 const multer = require('multer');
 const { uploadBuffer } = require('../utils/cloudinary');
 
@@ -16,7 +16,7 @@ const upload = multer({
  * Single file upload.
  * Form-data field: `file`
  */
-router.post('/', protect, upload.single('file'), async (req, res) => {
+router.post('/', protectAllowInactive, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file provided' });
@@ -48,7 +48,7 @@ router.post('/', protect, upload.single('file'), async (req, res) => {
  * Multiple files upload (up to 10).
  * Form-data field: `files`
  */
-router.post('/bulk', protect, upload.array('files', 10), async (req, res) => {
+router.post('/bulk', protectAllowInactive, upload.array('files', 10), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ success: false, message: 'No files provided' });

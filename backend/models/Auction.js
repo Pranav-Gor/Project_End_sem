@@ -70,13 +70,20 @@ const auctionSchema = new mongoose.Schema(
     },
     bids: [bidEntrySchema],
     watchers: { type: Number, default: 0 },
+    watchersList: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    commissionEarned: { type: Number, default: 0 },
     featured: { type: Boolean, default: false },
     hot: { type: Boolean, default: false },
     specifications: [specSchema],
     condition: { type: String, default: '' },
     authenticity: { type: String, default: '' },
     shipping: { type: String, default: '' },
-    returns: { type: String, default: '' }
+    returns: { type: String, default: '' },
+    winnerNotified: { type: Boolean, default: false },
+    sellerNotified: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

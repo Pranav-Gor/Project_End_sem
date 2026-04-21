@@ -21,9 +21,11 @@ exports.depositFunds = async (req, res) => {
       { new: true }
     );
 
+    const mockId = 'mock_payment_' + Date.now();
     await WalletTopup.create({
       userId: req.user.userId,
-      razorpayPaymentId: 'mock_payment_' + Date.now(),
+      razorpayPaymentId: mockId,
+      paymentIntentId: mockId,
       amountPaise: Math.round(amountInr * 100),
       amountInr,
       currency: 'INR',

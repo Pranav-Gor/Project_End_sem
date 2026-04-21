@@ -31,6 +31,7 @@ async function creditWalletFromRazorpayPayment({
     await WalletTopup.create({
       userId,
       razorpayPaymentId,
+      paymentIntentId: razorpayPaymentId,
       razorpayOrderId: razorpayOrderId || undefined,
       amountPaise: Math.round(Number(amountPaise)),
       amountInr,

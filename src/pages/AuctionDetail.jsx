@@ -4,20 +4,16 @@ import NavBrand from '../components/NavBrand'
 import NavAuthButtons from '../components/NavAuthButtons'
 import { formatINR, formatINRDecimal } from '../lib/currency'
 import { apiGet, apiPost } from '../lib/api'
+import { io } from 'socket.io-client'
 import { useToast } from '../contexts/ToastContext.jsx'
 import {
-  Bell, Flame, Heart, Share2,
+  Flame, Heart, Share2,
   Clock, ChevronLeft, ChevronRight, Star, Gavel, Shield,
   Eye, TrendingUp, CheckCircle2,
-  Sun, Moon, DollarSign, Package, Trash2, Timer
+  Sun, Moon, DollarSign, Package, Trash2, Timer, Bell
 } from 'lucide-react'
 
-const notificationsData = [
-  { id: 1, type: 'bid', title: 'You were outbid!', message: 'Someone placed a higher bid', time: '2 min ago', read: false, icon: DollarSign, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
-  { id: 2, type: 'message', title: 'New message', message: 'Seller replied to your question', time: '15 min ago', read: false, icon: Package, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
-  { id: 3, type: 'win', title: 'Auction Ending Soon!', message: 'Item ends in 30 minutes', time: '1 hour ago', read: false, icon: Timer, color: 'text-red-500', bgColor: 'bg-red-500/10' },
-  { id: 4, type: 'shipping', title: 'Item Shipped', message: 'Your item has been shipped', time: '3 hours ago', read: true, icon: Package, color: 'text-green-500', bgColor: 'bg-green-500/10' }
-]
+
 
 export default function AuctionDetail() {
   const navigate = useNavigate()
@@ -32,11 +28,24 @@ export default function AuctionDetail() {
   const [isFavorite, setIsFavorite] = useState(false)
   const [activeTab, setActiveTab] = useState('details')
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 })
-  const [notifications, setNotifications] = useState(notificationsData)
-  const [showNotifications, setShowNotifications] = useState(false)
   const [bidSubmitting, setBidSubmitting] = useState(false)
 
+  const [isNotified, setIsNotified] = useState(false)
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
+  const [contactInfo, setContactInfo] = useState(null)
+  const [currentUser, setCurrentUser] = useState(null)
+
+  useEffect(() => {
+    const loadUser = () => {
+      try {
+        const u = JSON.parse(localStorage.getItem('user'))
+        setCurrentUser(u)
+      } catch (e) {}
+    }
+    loadUser()
+    window.addEventListener('auctus-auth', loadUser)
+    return () => window.removeEventListener('auctus-auth', loadUser)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -50,11 +59,57 @@ export default function AuctionDetail() {
           setAuction(null)
         } else {
           setAuction(data.data.auction)
+          try {
+            const user = JSON.parse(localStorage.getItem('user'))
+            if (user && data.data.auction.watchersList?.includes(user._id)) {
+              setIsNotified(true)
+            }
+          } catch (e) {}
+
+          if (data.data.auction.status === 'closed' && localStorage.getItem('accessToken')) {
+            const res = await apiGet(`/api/auctions/${id}/contact-info`, localStorage.getItem('accessToken'))
+            if (res.ok && res.data?.success) {
+              setContactInfo(res.data.data)
+            }
+          }
         }
         setLoading(false)
       })()
     return () => {
       cancelled = true
+    }
+  }, [id])
+
+  // Socket.IO for Live Bidding
+  useEffect(() => {
+    if (!id) return
+
+    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+    const socket = io(backendUrl)
+
+    socket.emit('join_auction', id)
+
+    socket.on('new_bid', (data) => {
+      const { newBid, currentBid, bidCount } = data
+      setAuction((prev) => {
+        if (!prev) return prev
+        // Prevent duplicate bids if we just placed it
+        const alreadyExists = prev.bids?.some(b => b.id === newBid.id)
+        if (alreadyExists) return prev
+
+        return {
+          ...prev,
+          currentBid,
+          bidCount: bidCount || prev.bidCount + 1,
+          bids: [...(prev.bids || []), newBid]
+        }
+      })
+      // Optional: add a tiny visual feedback here if needed
+    })
+
+    return () => {
+      socket.emit('leave_auction', id)
+      socket.disconnect()
     }
   }, [id])
 
@@ -82,20 +137,7 @@ export default function AuctionDetail() {
   }, [tick])
 
   const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
-  const unreadCount = notifications.filter((n) => !n.read).length
-  const markAsRead = (nid) => setNotifications((prev) => prev.map((n) => (n.id === nid ? { ...n, read: true } : n)))
-  const deleteNotification = (nid, e) => {
-    e.stopPropagation()
-    setNotifications((prev) => prev.filter((n) => n.id !== nid))
-  }
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showNotifications && !event.target.closest('.notification-container')) setShowNotifications(false)
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showNotifications])
 
   const handleBid = async (e) => {
     e.preventDefault()
@@ -123,6 +165,11 @@ export default function AuctionDetail() {
         return
       }
       if (!ok || !data?.success) {
+        if (data?.code === 'MISSING_ADDRESS') {
+          addToast(data.message, 'error', 6000)
+          setTimeout(() => navigate('/profile'), 3000)
+          return
+        }
         addToast(data?.message || 'Could not place bid', 'error')
         return
       }
@@ -143,6 +190,27 @@ export default function AuctionDetail() {
       setBidAmount('')
     } finally {
       setBidSubmitting(false)
+    }
+  }
+
+  const handleToggleNotify = async () => {
+    if (!localStorage.getItem('accessToken')) {
+      navigate(`/auth?next=${encodeURIComponent(`/auction/${id}`)}&reason=notify`)
+      return
+    }
+    setIsNotified(p => !p)
+    try {
+      const { ok, data } = await apiPost(`/api/auctions/${id}/notify`)
+      if (!ok || !data?.success) {
+        setIsNotified(p => !p)
+        addToast(data?.message || 'Failed to toggle notification', 'error')
+      } else {
+        setIsNotified(data.data.isWatching)
+        setAuction(prev => prev ? { ...prev, watchers: data.data.watchersCount } : prev)
+      }
+    } catch (e) {
+      setIsNotified(p => !p)
+      addToast('Failed to connect to server', 'error')
     }
   }
 
@@ -206,52 +274,6 @@ export default function AuctionDetail() {
               >
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
-
-              <div className="relative notification-container">
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="relative p-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
-                >
-                  <Bell className="w-5 h-5 lg:w-6 lg:h-6" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
-                      {unreadCount}
-                    </span>
-                  )}
-                </button>
-                {showNotifications && (
-                  <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden z-50">
-                    <div className="p-4 border-b border-slate-100 dark:border-white/5">
-                      <h3 className="font-bold text-slate-900 dark:text-white">Notifications</h3>
-                    </div>
-                    <div className="max-h-96 overflow-y-auto">
-                      {notifications.map((notification) => (
-                        <div
-                          key={notification.id}
-                          onClick={() => markAsRead(notification.id)}
-                          className={`flex items-start gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors border-b border-slate-100 dark:border-white/5 last:border-0 ${!notification.read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
-                        >
-                          <div className={`p-2 rounded-xl ${notification.bgColor} flex-shrink-0`}>
-                            <notification.icon className={`w-5 h-5 ${notification.color}`} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm text-slate-900 dark:text-white">{notification.title}</p>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">{notification.message}</p>
-                            <p className="text-xs text-slate-400 mt-1">{notification.time}</p>
-                          </div>
-                          {!notification.read && <div className="w-2 h-2 bg-auctus-teal rounded-full flex-shrink-0" />}
-                          <button
-                            onClick={(e) => deleteNotification(notification.id, e)}
-                            className="p-1 text-slate-300 hover:text-red-500 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
 
               <NavAuthButtons />
               <NavAuthButtons compact />
@@ -347,10 +369,22 @@ export default function AuctionDetail() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="px-3 py-1 bg-auctus-teal/10 text-auctus-teal text-xs font-bold rounded-full">{auction.category}</span>
-                <span className="px-3 py-1 bg-green-500/10 text-green-500 text-xs font-bold rounded-full flex items-center gap-1">
-                  <Flame className="w-3 h-3" />
-                  LIVE
-                </span>
+                {auction.status === 'live' && (
+                  <span className="px-3 py-1 bg-green-500/10 text-green-500 text-xs font-bold rounded-full flex items-center gap-1">
+                    <Flame className="w-3 h-3" />
+                    LIVE
+                  </span>
+                )}
+                {auction.status === 'closed' && (
+                  <span className="px-3 py-1 bg-red-500/10 text-red-500 text-xs font-bold rounded-full flex items-center gap-1">
+                    CLOSED
+                  </span>
+                )}
+                {auction.status === 'upcoming' && (
+                  <span className="px-3 py-1 bg-blue-500/10 text-blue-500 text-xs font-bold rounded-full flex items-center gap-1">
+                    UPCOMING
+                  </span>
+                )}
               </div>
               <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">{auction.title}</h1>
               <div className="flex items-center gap-4 mt-3">
@@ -367,27 +401,35 @@ export default function AuctionDetail() {
 
             <div className={`p-6 rounded-2xl text-white ${auction.status === 'upcoming'
               ? 'bg-gradient-to-br from-blue-600 to-indigo-600'
-              : timeLeft.hours === 0 && timeLeft.minutes < 30
-                ? 'bg-gradient-to-br from-red-500 to-orange-500'
-                : 'bg-gradient-to-br from-slate-700 to-slate-800'
+              : auction.status === 'closed'
+                ? 'bg-gradient-to-br from-slate-800 to-slate-900'
+                : timeLeft.hours === 0 && timeLeft.minutes < 30
+                  ? 'bg-gradient-to-br from-red-500 to-orange-500'
+                  : 'bg-gradient-to-br from-slate-700 to-slate-800'
               }`}>
               <p className="text-sm font-medium opacity-90 mb-3">
-                {auction.status === 'upcoming' ? '🗓 Auction Starts In:' : '⏱ Auction Ends In:'}
+                {auction.status === 'upcoming' ? '🗓 Auction Starts In:' : auction.status === 'closed' ? '🛑 Auction Ended:' : '⏱ Auction Ends In:'}
               </p>
-              <div className="flex items-center gap-3">
-                {[{ v: timeLeft.hours, l: 'Hours' }, { v: timeLeft.minutes, l: 'Minutes' }, { v: timeLeft.seconds, l: 'Seconds' }].map(({ v, l }, i, arr) => (
-                  <>
-                    <div key={l} className="text-center">
-                      <div className="text-3xl lg:text-4xl font-black tabular-nums">{String(v).padStart(2, '0')}</div>
-                      <div className="text-[10px] uppercase tracking-widest opacity-70 mt-0.5">{l}</div>
+              
+              {auction.status !== 'closed' ? (
+                <div className="flex items-center gap-3">
+                  {[{ v: timeLeft.hours, l: 'Hours' }, { v: timeLeft.minutes, l: 'Minutes' }, { v: timeLeft.seconds, l: 'Seconds' }].map(({ v, l }, i, arr) => (
+                    <div key={l} className="flex items-center gap-3">
+                      <div className="text-center">
+                        <div className="text-3xl lg:text-4xl font-black tabular-nums">{String(v).padStart(2, '0')}</div>
+                        <div className="text-[10px] uppercase tracking-widest opacity-70 mt-0.5">{l}</div>
+                      </div>
+                      {i < arr.length - 1 && <div className="text-2xl font-black opacity-60">:</div>}
                     </div>
-                    {i < arr.length - 1 && <div className="text-2xl font-black opacity-60">:</div>}
-                  </>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-2xl font-black opacity-80">This auction is closed.</div>
+              )}
+              
               {auction.endsAt && (
                 <p className="text-xs opacity-60 mt-3">
-                  {auction.status === 'upcoming' ? 'Opens' : 'Closes'}: {new Date(auction.endsAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  {auction.status === 'upcoming' ? 'Opens' : 'Closed'}: {new Date(auction.endsAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </p>
               )}
             </div>
@@ -404,35 +446,97 @@ export default function AuctionDetail() {
                 </div>
               </div>
 
-              <form onSubmit={handleBid} className="space-y-3">
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Bids debit your{' '}
-                  <Link to="/wallet" className="font-semibold text-auctus-teal hover:underline">
-                    wallet balance
-                  </Link>{' '}
-                  only — not your card.
-                </p>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">₹</span>
-                  <input
-                    type="number"
-                    value={bidAmount}
-                    onChange={(e) => setBidAmount(e.target.value)}
-                    placeholder={`Enter ${formatINR(minBid)} or more`}
-                    min={minBid}
-                    disabled={bidSubmitting}
-                    className="w-full pl-10 pr-4 py-4 bg-slate-100 dark:bg-slate-700 border border-transparent rounded-xl text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-auctus-teal focus:ring-2 focus:ring-auctus-teal/20 transition-all disabled:opacity-60"
-                  />
+              {auction.status === 'upcoming' ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    This auction hasn't started yet. Get notified the moment it goes live!
+                  </p>
+                  <button
+                    onClick={handleToggleNotify}
+                    className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${isNotified ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg hover:shadow-blue-500/30'}`}
+                  >
+                    <Bell className="w-5 h-5" />
+                    {isNotified ? 'You will be notified' : 'Notify Me When Live'}
+                  </button>
                 </div>
-                <button
-                  type="submit"
-                  disabled={bidSubmitting}
-                  className="w-full py-4 bg-gradient-to-r from-auctus-teal to-auctus-cyan text-white font-bold rounded-xl hover:shadow-lg hover:shadow-auctus-teal/30 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
-                >
-                  <Gavel className="w-5 h-5" />
-                  {bidSubmitting ? 'Placing bid…' : 'Place Bid'}
-                </button>
-              </form>
+              ) : auction.status === 'closed' ? (
+                <div className="space-y-4">
+                  {contactInfo ? (
+                    <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100 space-y-3">
+                      <div className="flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 className="w-5 h-5" />
+                        {contactInfo.role === 'winner' ? 'You won this auction!' : 'You are the seller.'}
+                      </div>
+                      <div className="text-sm">
+                        <p className="font-semibold mb-1">
+                          {contactInfo.role === 'winner' ? 'Seller Contact Info:' : 'Winner Contact Info:'}
+                        </p>
+                        {contactInfo.role === 'winner' ? (
+                          <ul className="space-y-1 opacity-90">
+                            <li>Name: {contactInfo.seller.name}</li>
+                            <li>Email: <a href={`mailto:${contactInfo.seller.email}`} className="underline hover:text-emerald-600">{contactInfo.seller.email}</a></li>
+                            <li>Phone: {contactInfo.seller.phone}</li>
+                          </ul>
+                        ) : (
+                          <ul className="space-y-1 opacity-90">
+                            <li>Name: {contactInfo.winner.name}</li>
+                            <li>Email: <a href={`mailto:${contactInfo.winner.email}`} className="underline hover:text-emerald-600">{contactInfo.winner.email}</a></li>
+                            <li>Phone: {contactInfo.winner.phone}</li>
+                          </ul>
+                        )}
+                      </div>
+                      <p className="text-xs opacity-75 mt-2">
+                        {contactInfo.role === 'winner' ? 'Please contact the seller to arrange shipping/pickup.' : 'Please contact the winner to arrange shipping/pickup.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <button
+                      disabled
+                      className="w-full py-4 bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-bold rounded-xl flex items-center justify-center gap-2"
+                    >
+                      <Gavel className="w-5 h-5" />
+                      Auction Closed
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <form onSubmit={handleBid} className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Bids debit your{' '}
+                      <Link to="/wallet" className="font-semibold text-auctus-teal hover:underline">
+                        wallet
+                      </Link>{' '}
+                      only.
+                    </p>
+                    {currentUser && (
+                      <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                        Balance: <span className="text-auctus-teal font-bold">{formatINR(currentUser.walletBalance || 0)}</span>
+                      </p>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">₹</span>
+                    <input
+                      type="number"
+                      value={bidAmount}
+                      onChange={(e) => setBidAmount(e.target.value)}
+                      placeholder={`Enter ${formatINR(minBid)} or more`}
+                      min={minBid}
+                      disabled={bidSubmitting}
+                      className="w-full pl-10 pr-4 py-4 bg-slate-100 dark:bg-slate-700 border border-transparent rounded-xl text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-auctus-teal focus:ring-2 focus:ring-auctus-teal/20 transition-all disabled:opacity-60"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={bidSubmitting}
+                    className="w-full py-4 bg-gradient-to-r from-auctus-teal to-auctus-cyan text-white font-bold rounded-xl hover:shadow-lg hover:shadow-auctus-teal/30 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                  >
+                    <Gavel className="w-5 h-5" />
+                    {bidSubmitting ? 'Placing bid…' : 'Place Bid'}
+                  </button>
+                </form>
+              )}
 
               <div className="flex gap-3 mt-4">
                 <button

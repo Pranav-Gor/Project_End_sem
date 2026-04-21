@@ -311,3 +311,115 @@ exports.processFinancialRequest = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to process request.' });
   }
 };
+
+/**
+ * GET /api/admin/metrics
+ * Fetch system metrics including platform commission
+ */
+exports.getMetrics = async (req, res) => {
+  try {
+    const Auction = require('../models/Auction');
+    
+    // Core Metrics
+    const usersCount = await User.countDocuments();
+    const liveAuctionsCount = await Auction.countDocuments({ status: 'live' });
+    const activeSellers = await User.countDocuments({ role: 'seller', status: 'active' });
+    
+    // Revenue calculations
+    const closedAuctions = await Auction.find({ status: 'closed' }).select('commissionEarned currentBid endsAt');
+    const totalCommission = closedAuctions.reduce((sum, a) => sum + (a.commissionEarned || 0), 0);
+    const totalGMV = closedAuctions.reduce((sum, a) => sum + (a.currentBid || 0), 0);
+    const avgOrderValue = closedAuctions.length > 0 ? (totalGMV / closedAuctions.length) : 0;
+    
+    // Build timeline — supports ?days=5,7,14,30 (default 5)
+    const days = Math.min(parseInt(req.query.days) || 5, 30);
+    const timeline = [];
+    const now = new Date();
+    for (let i = days - 1; i >= 0; i--) {
+      const targetDate = new Date(now);
+      targetDate.setDate(now.getDate() - i);
+      targetDate.setHours(0, 0, 0, 0);
+      const nextDay = new Date(targetDate);
+      nextDay.setDate(targetDate.getDate() + 1);
+      
+      const dayAuctions = closedAuctions.filter(a => {
+        const d = new Date(a.endsAt);
+        return d >= targetDate && d < nextDay;
+      });
+      const dayGMV = dayAuctions.reduce((sum, a) => sum + (a.currentBid || 0), 0);
+      const dateLabel = targetDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+      
+      timeline.push({
+        name: dateLabel,
+        revenue: dayGMV
+      });
+    }
+
+    const adminUser = await User.findById(req.user._id);
+
+    res.json({
+      success: true,
+      data: {
+        usersCount,
+        liveAuctionsCount,
+        totalCommission,
+        totalGMV,
+        avgOrderValue,
+        activeSellers,
+        timeline,
+        adminWalletBalance: adminUser ? adminUser.walletBalance : 0
+      }
+    });
+  } catch (e) {
+    console.error('getMetrics Error:', e);
+    res.status(500).json({ success: false, message: 'Failed to fetch metrics' });
+  }
+};
+
+/**
+ * POST /api/admin/withdraw
+ * Allows an admin to withdraw funds from their wallet.
+ */
+exports.adminWithdraw = async (req, res) => {
+  try {
+    const { amount, bankDetails } = req.body;
+    const admin = await User.findById(req.user._id);
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid withdrawal amount' });
+    }
+
+    if (admin.walletBalance < amount) {
+      return res.status(400).json({ success: false, message: 'Insufficient balance' });
+    }
+
+    if (!bankDetails) {
+      return res.status(400).json({ success: false, message: 'Bank details are required' });
+    }
+
+    // Deduct from admin wallet
+    admin.walletBalance -= amount;
+    await admin.save();
+
+    // Create withdrawal record
+    await Withdrawal.create({
+      userId: admin._id,
+      amount,
+      bankDetails,
+      status: 'processed', // Admin withdrawals are auto-processed (simulated)
+      processedAt: new Date(),
+      adminNote: 'Admin self-withdrawal'
+    });
+
+    res.json({
+      success: true,
+      message: `Withdrawal of ₹${amount} successful.`,
+      data: { newBalance: admin.walletBalance }
+    });
+
+  } catch (e) {
+    console.error('adminWithdraw Error:', e);
+    res.status(500).json({ success: false, message: 'Withdrawal failed' });
+  }
+};
+

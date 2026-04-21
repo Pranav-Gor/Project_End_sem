@@ -4,19 +4,13 @@ import NavBrand from '../components/NavBrand'
 import NavAuthButtons from '../components/NavAuthButtons'
 import { formatINR } from '../lib/currency'
 import {
-  Search, Bell, X, Calendar, Clock, BellRing, Check,
+  Search, X, Calendar, Clock, Check, BellRing,
   Star, Menu, Sun, Moon, DollarSign, Package, Trash2, MessageCircle,
   Timer, Loader2, PackageSearch, Filter, LayoutGrid, List
 } from 'lucide-react'
-import { apiGet } from '../lib/api'
+import { apiGet, apiPost } from '../lib/api'
 
-// ── Notification mock ─────────────────────────────────────────────────
-const notificationsData = [
-  { id: 1, type: 'bid',     title: 'You were outbid!',       message: 'Someone placed a higher bid',         time: '2 min ago',   read: false, icon: DollarSign,    color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
-  { id: 2, type: 'message', title: 'New message',             message: 'Seller replied to your question',     time: '15 min ago',  read: false, icon: MessageCircle, color: 'text-blue-500',   bgColor: 'bg-blue-500/10' },
-  { id: 3, type: 'win',     title: 'Auction Ending Soon!',    message: 'Item ends in 30 minutes',             time: '1 hour ago',  read: false, icon: Timer,         color: 'text-red-500',    bgColor: 'bg-red-500/10' },
-  { id: 4, type: 'shipping',title: 'Item Shipped',            message: 'Your item has been shipped',          time: '3 hours ago', read: true,  icon: Package,       color: 'text-green-500',  bgColor: 'bg-green-500/10' },
-]
+
 
 // ── Days-remaining progress bar ──────────────────────────────────────
 function DaysBar({ startsAt }) {
@@ -174,8 +168,6 @@ export default function UpcomingAuctions() {
   const [viewMode, setViewMode] = useState('grid')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
-  const [notifications, setNotifications] = useState(notificationsData)
-  const [showNotifications, setShowNotifications] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [notifiedAuctions, setNotifiedAuctions] = useState([])
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
@@ -212,22 +204,25 @@ export default function UpcomingAuctions() {
     return () => { cancelled = true }
   }, [])
 
-  const unreadCount = notifications.filter(n => !n.read).length
-  const markAsRead  = (id) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
-  const deleteNotif = (id, e) => { e.stopPropagation(); setNotifications(prev => prev.filter(n => n.id !== id)) }
-
-  useEffect(() => {
-    const h = (e) => { if (showNotifications && !e.target.closest('.notif-wrap')) setShowNotifications(false) }
-    document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
-  }, [showNotifications])
-
-  const toggleNotify = (id) => {
-    if (!localStorage.getItem('user')) {
+  const toggleNotify = async (id) => {
+    if (!localStorage.getItem('accessToken')) {
       navigate(`/auth?next=${encodeURIComponent('/upcoming-auctions')}&reason=notify`)
       return
     }
+    
+    // Optimistic update
     setNotifiedAuctions(prev => prev.includes(id) ? prev.filter(n => n !== id) : [...prev, id])
+    
+    try {
+      const res = await apiPost(`/api/auctions/${id}/notify`);
+      if (!res.ok || !res.data.success) {
+         // Revert on failure
+         setNotifiedAuctions(prev => prev.includes(id) ? prev.filter(n => n !== id) : [...prev, id])
+      }
+    } catch (err) {
+      // Revert on failure
+      setNotifiedAuctions(prev => prev.includes(id) ? prev.filter(n => n !== id) : [...prev, id])
+    }
   }
 
   const [timeframe, setTimeframe] = useState('7d') // Default to 7 days as requested
@@ -274,32 +269,7 @@ export default function UpcomingAuctions() {
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
 
-              {/* Notifications */}
-              <div className="relative notif-wrap">
-                <button onClick={() => setShowNotifications(!showNotifications)} className="relative p-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
-                  <Bell className="w-5 h-5 lg:w-6 lg:h-6" />
-                  {unreadCount > 0 && <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">{unreadCount}</span>}
-                </button>
-                {showNotifications && (
-                  <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden z-50">
-                    <div className="p-4 border-b border-slate-100 dark:border-white/5"><h3 className="font-bold text-slate-900 dark:text-white">Notifications</h3></div>
-                    <div className="max-h-80 overflow-y-auto">
-                      {notifications.map(n => (
-                        <div key={n.id} onClick={() => markAsRead(n.id)} className={`flex items-start gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors border-b border-slate-100 dark:border-white/5 last:border-0 ${!n.read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}>
-                          <div className={`p-2 rounded-xl ${n.bgColor} flex-shrink-0`}><n.icon className={`w-5 h-5 ${n.color}`} /></div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm text-slate-900 dark:text-white">{n.title}</p>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">{n.message}</p>
-                            <p className="text-xs text-slate-400 mt-1">{n.time}</p>
-                          </div>
-                          {!n.read && <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1" />}
-                          <button onClick={(e) => deleteNotif(n.id, e)} className="p-1 text-slate-300 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+
 
               <NavAuthButtons />
               <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="lg:hidden p-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">

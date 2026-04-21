@@ -2,6 +2,7 @@ const express = require('express');
 const { body } = require('express-validator');
 const {
   register,
+  verifyRegistration,
   login,
   forgotPasswordRequestOtp,
   forgotPasswordConfirmOtp,
@@ -9,7 +10,8 @@ const {
   logout,
   getMe,
   updateProfile,
-  changePassword
+  changePassword,
+  resendRegistrationOtp
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
@@ -111,6 +113,13 @@ const updateProfileValidation = [
 
 // Public routes
 router.post('/register', registerValidation, register);
+router.post('/verify-registration', [
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('otp').matches(/^\d{4}$/).withMessage('OTP must be a 4-digit code')
+], verifyRegistration);
+router.post('/resend-registration-otp', [
+  body('email').isEmail().withMessage('Valid email is required')
+], resendRegistrationOtp);
 router.post('/login', loginValidation, login);
 router.post('/forgot-password/request', forgotPasswordRequestValidation, forgotPasswordRequestOtp);
 router.post('/forgot-password/confirm', forgotPasswordConfirmValidation, forgotPasswordConfirmOtp);

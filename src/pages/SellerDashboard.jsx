@@ -27,14 +27,15 @@ export default function SellerDashboard() {
   const [loading, setLoading] = useState(true)
   const [analytics, setAnalytics] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [period, setPeriod] = useState('14d')
+  const [period, setPeriod] = useState('5d')
+  const [chartPeriod, setChartPeriod] = useState('5d')
   
   useEffect(() => {
     (async () => {
       setLoading(true);
       try {
         const token = localStorage.getItem('accessToken')
-        const res = await apiGet(`/api/analytics/dashboard?period=${period}`, token)
+        const res = await apiGet(`/api/analytics/dashboard?period=${chartPeriod}`, token)
         if (res.ok && res.data?.success) {
           setAnalytics(res.data.data)
         }
@@ -44,7 +45,7 @@ export default function SellerDashboard() {
         setLoading(false)
       }
     })()
-  }, [period])
+  }, [chartPeriod])
 
   const logout = () => {
     localStorage.removeItem('accessToken')
@@ -62,8 +63,9 @@ export default function SellerDashboard() {
     )
   }
 
+  const periodLabel = { '5d': '5 Days', '7d': '7 Days', '14d': '14 Days', 'month': 'Month', 'all': 'All Time' }[chartPeriod] || ''
   const stats = [
-    { label: 'Revenue (14d)', value: formatINR(analytics?.summary.totalGross || 0), change: '+12.5%', icon: DollarSign, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { label: `Revenue (${periodLabel})`, value: formatINR(analytics?.summary.totalGross || 0), change: '+12.5%', icon: DollarSign, color: 'text-blue-500', bg: 'bg-blue-500/10' },
     { label: 'Active Lots', value: analytics?.summary.live || '0', change: 'Live Now', icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
     { label: 'Bid Engagement', value: analytics?.summary.avgBidsPerAuction || '0', change: 'Bids/Lot', icon: Users, color: 'text-violet-500', bg: 'bg-violet-500/10' },
     { label: 'Sales Velocity', value: `${analytics?.summary.successRate || 0}%`, change: 'Success', icon: TrendingUp, color: 'text-amber-500', bg: 'bg-amber-500/10' },
@@ -75,21 +77,21 @@ export default function SellerDashboard() {
       {/* ── Sidebar ────────────────────────────────────────────── */}
       <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} hidden lg:flex flex-col bg-white dark:bg-[#0B0F21] border-r border-slate-200 dark:border-white/5 transition-all duration-300 z-50`}>
         <div className="p-6 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-500/20 flex-shrink-0">
-            <Store className="w-5 h-5 text-white" />
-          </div>
-          {sidebarOpen && <span className="font-black text-xl tracking-tight">AUCTUS</span>}
+          <span className={`font-black tracking-widest uppercase text-slate-900 dark:text-white transition-all ${sidebarOpen ? 'text-2xl' : 'text-sm'}`}>
+            {sidebarOpen ? 'Auctus.' : 'A.'}
+          </span>
         </div>
 
         <nav className="flex-1 px-4 py-4 space-y-2">
           <NavItem icon={Package} label="Auctions" to="/seller/dashboard" active={true} open={sidebarOpen} />
           <NavItem icon={PlusCircle} label="New Auction" to="/seller/auctions/new" open={sidebarOpen} />
           <NavItem icon={Wallet2} label="Payouts" to="/seller/payouts" open={sidebarOpen} />
+          <NavItem icon={CircleDollarSign} label="Wallet" to="/wallet" open={sidebarOpen} />
           <div className="pt-4 pb-2 px-2">
             <div className="h-px bg-slate-200 dark:bg-white/5" />
           </div>
           <NavItem icon={Home} label="Back to Platform" to="/" open={sidebarOpen} />
-          <NavItem icon={Settings} label="Settings" open={sidebarOpen} />
+
           <NavItem icon={HelpCircle} label="Support" open={sidebarOpen} />
         </nav>
 
@@ -165,52 +167,8 @@ export default function SellerDashboard() {
 
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Revenue Trend Area Chart */}
-            <div className="lg:col-span-2 bg-white dark:bg-[#0B0F21] rounded-[32px] p-8 border border-slate-200 dark:border-white/5 shadow-sm">
-              <div className="flex items-center justify-between mb-10">
-                <div>
-                  <h3 className="text-xl font-black flex items-center gap-2">
-                    <TrendingUp className="w-6 h-6 text-blue-500" /> Revenue History
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-black">Daily sales volume across all lots</p>
-                </div>
-              </div>
-              <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={analytics?.timeline || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                    <XAxis 
-                      dataKey="day" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fill: '#64748b', fontSize: 10, fontWeight: 800 }} 
-                      dy={10}
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fill: '#64748b', fontSize: 10, fontWeight: 800 }} 
-                    />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#0B0F21', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '12px' }}
-                      itemStyle={{ color: '#fff', fontWeight: 'bold' }}
-                      labelStyle={{ color: '#64748b', fontWeight: 'bold' }}
-                      formatter={(v) => formatINR(v)}
-                    />
-                    <Area type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorRev)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
             {/* Category Pie Chart */}
-            <div className="bg-white dark:bg-[#0B0F21] rounded-[32px] p-8 border border-slate-200 dark:border-white/5 shadow-sm">
+            <div className="lg:col-span-3 bg-white dark:bg-[#0B0F21] rounded-[32px] p-8 border border-slate-200 dark:border-white/5 shadow-sm">
               <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-8">Category Spread</h3>
               <div className="h-[250px] w-full">
                 <ResponsiveContainer width="100%" height="100%">

@@ -15,10 +15,9 @@ import { apiPost } from '../lib/api.js'
 function LinkBrand() {
   return (
     <div className="mb-10 flex items-center gap-3">
-      <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl">
-        <Gavel className="w-7 h-7 lg:w-8 lg:h-8 text-white" />
-      </div>
-      <span className="text-3xl lg:text-4xl font-black text-white tracking-tight">AUCTUS</span>
+      <Link to="/" className="text-3xl lg:text-4xl font-black text-white tracking-widest uppercase hover:text-auctus-cyan transition-colors">
+        Auctus.
+      </Link>
     </div>
   )
 }

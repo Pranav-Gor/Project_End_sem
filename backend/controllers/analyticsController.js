@@ -9,11 +9,15 @@ const Payout = require('../models/Payout');
 exports.getSellerAnalytics = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const period = req.query.period || '14d'; // '14d', 'month', 'all'
+    const period = req.query.period || '5d'; // '5d', '7d', '14d', 'month', 'all'
     
     let startDate = new Date(0);
     const now = new Date();
-    if (period === '14d') {
+    if (period === '5d') {
+      startDate = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
+    } else if (period === '7d') {
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    } else if (period === '14d') {
       startDate = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
     } else if (period === 'month') {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -58,12 +62,11 @@ exports.getSellerAnalytics = async (req, res) => {
     const successRate = validClosed.length > 0 ? Math.round((successful / validClosed.length) * 100) : 0;
 
     // Build timeline dates
-    let daysForTimeline = 14;
-    if (period === 'month') {
-      daysForTimeline = now.getDate(); // days passed in current month
-    } else if (period === 'all') {
-      daysForTimeline = 30; // Max 30 points for 'all' to prevent chart overload
-    }
+    let daysForTimeline = 5;
+    if (period === '7d') daysForTimeline = 7;
+    else if (period === '14d') daysForTimeline = 14;
+    else if (period === 'month') daysForTimeline = now.getDate();
+    else if (period === 'all') daysForTimeline = 30;
     const timeline = await calculateRevenueTimeline(userId, daysForTimeline);
 
     // Recent Activity Feed
