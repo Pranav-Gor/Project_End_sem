@@ -1,0 +1,257 @@
+[{
+  "_id": {
+    "$oid": "69e6811c65417f10f39b0622"
+  },
+  "auctionId": 128673927,
+  "title": "The Ferrari 126",
+  "category": "Automotive",
+  "description": "The Ferrari 126 refers to a series of Formula One cars produced by Ferrari, particularly notable for their turbocharged engines.\nThe Ferrari 126 C was introduced in 1981 and marked the beginning of Ferrari's turbocharged era, featuring a 1.5-liter V6 turbocharged engine that produced around 600 horsepower. \n2",
+  "images": [
+    "https://res.cloudinary.com/dki0p4gtm/image/upload/v1776714012/auctus/auctions/dhgptlcb77gebejzyxha.webp",
+    "https://res.cloudinary.com/dki0p4gtm/image/upload/v1776714012/auctus/auctions/g3nrhqjwnleakvk2a8rv.webp"
+  ],
+  "startingBid": 500,
+  "currentBid": 500,
+  "minIncrement": 100,
+  "bidCount": 0,
+  "status": "upcoming",
+  "startsAt": {
+    "$date": "2026-04-25T19:40:00.000Z"
+  },
+  "endsAt": {
+    "$date": "2026-04-27T19:40:00.000Z"
+  },
+  "seller": {
+    "sellerUserId": {
+      "$oid": "69e6808865417f10f39b05e2"
+    },
+    "name": "SIMFORM SOFTWARE",
+    "rating": 5,
+    "reviews": 0,
+    "sales": 0,
+    "location": "anand",
+    "memberSince": "2026"
+  },
+  "watchers": 0,
+  "watchersList": [],
+  "commissionEarned": 0,
+  "featured": false,
+  "hot": false,
+  "condition": "Mint / Brand New",
+  "authenticity": "",
+  "shipping": "Anand",
+  "returns": "Anand",
+  "winnerNotified": false,
+  "sellerNotified": false,
+  "bids": [],
+  "specifications": [],
+  "createdAt": {
+    "$date": "2026-04-20T19:40:12.875Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-20T19:40:12.875Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e6821c65417f10f39b06a5"
+  },
+  "auctionId": 2684024122,
+  "title": "Ferrari 312T",
+  "category": "Automotive",
+  "description": "The 1975 Ferrari F1 car was the Ferrari 312T, a dominant Formula 1 machine designed by Mauro Forghieri that delivered both the 1975 Drivers' (Niki Lauda) and Constructors' championships. It featured a groundbreaking transverse-mounted 5-speed gearbox (\"T\" for trasversale) to improve handling, paired with a 3.0-liter flat-12 engine producing roughly \n\n hp",
+  "images": [
+    "https://res.cloudinary.com/dki0p4gtm/image/upload/v1776714268/auctus/auctions/mpgfwa9kgh98hqrezvsd.jpg",
+    "https://res.cloudinary.com/dki0p4gtm/image/upload/v1776714268/auctus/auctions/kx6akycbdny0rlqrzptw.jpg",
+    "https://res.cloudinary.com/dki0p4gtm/image/upload/v1776714268/auctus/auctions/trm3yqt4ituqigtuv3j4.jpg"
+  ],
+  "startingBid": 50000,
+  "currentBid": 51000,
+  "minIncrement": 1000,
+  "bidCount": 1,
+  "status": "closed",
+  "startsAt": {
+    "$date": "2026-04-20T19:44:00.000Z"
+  },
+  "endsAt": {
+    "$date": "2026-04-21T19:44:00.000Z"
+  },
+  "seller": {
+    "sellerUserId": {
+      "$oid": "69e6808865417f10f39b05e2"
+    },
+    "name": "SIMFORM SOFTWARE",
+    "rating": 5,
+    "reviews": 0,
+    "sales": 0,
+    "location": "anand",
+    "memberSince": "2026"
+  },
+  "watchers": 0,
+  "watchersList": [],
+  "commissionEarned": 5100,
+  "featured": false,
+  "hot": false,
+  "condition": "Mint / Brand New",
+  "authenticity": "",
+  "shipping": "Anand",
+  "returns": "Anand",
+  "winnerNotified": false,
+  "sellerNotified": false,
+  "bids": [
+    {
+      "bidderName": "Pranav gor",
+      "bidderUserId": {
+        "$oid": "69e62e171e53f973b2c5fc58"
+      },
+      "amount": 51000,
+      "timeLabel": "01:16 am",
+      "_id": {
+        "$oid": "69e6828e65417f10f39b0729"
+      }
+    }
+  ],
+  "specifications": [],
+  "createdAt": {
+    "$date": "2026-04-20T19:44:28.405Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-20T19:59:24.566Z"
+  },
+  "__v": 1
+},
+{
+  "_id": {
+    "$oid": "69e6e030ce876253182bca2b"
+  },
+  "auctionId": 3526608182,
+  "title": "Sf25",
+  "category": "Automotive",
+  "description": "Lewis Hamilton in the Ferrari Sf25 at Fiorano,Italy : r ...The Ferrari SF-25 is the 2025 Formula 1 car constructed by Scuderia Ferrari for the 2025 World Championship, featuring a 99% new design compared to its predecessor. Driven by Charles Leclerc and Lewis Hamilton, it is characterized by a darker red livery, a longer wheelbase, and a new pull-rod front suspension aimed at maximizing high-speed downforce",
+  "images": [
+    "https://res.cloudinary.com/dki0p4gtm/image/upload/v1776738352/auctus/auctions/k6zns5xqkvhurxpghdaz.jpg",
+    "https://res.cloudinary.com/dki0p4gtm/image/upload/v1776738352/auctus/auctions/hhdzik4vetd50ghltcgy.jpg"
+  ],
+  "startingBid": 50000,
+  "currentBid": 50000,
+  "minIncrement": 2000,
+  "bidCount": 0,
+  "status": "live",
+  "startsAt": {
+    "$date": "2026-04-21T02:25:00.000Z"
+  },
+  "endsAt": {
+    "$date": "2026-04-22T02:25:00.000Z"
+  },
+  "seller": {
+    "sellerUserId": {
+      "$oid": "69e6dd59ce876253182bc918"
+    },
+    "name": "YASH ENTERPRISE",
+    "rating": 5,
+    "reviews": 0,
+    "sales": 0,
+    "location": "Anand",
+    "memberSince": "2026"
+  },
+  "watchers": 0,
+  "watchersList": [],
+  "commissionEarned": 0,
+  "featured": false,
+  "hot": false,
+  "condition": "Mint / Brand New",
+  "authenticity": "",
+  "shipping": "Anand",
+  "returns": "Anand",
+  "winnerNotified": false,
+  "sellerNotified": false,
+  "bids": [],
+  "specifications": [],
+  "createdAt": {
+    "$date": "2026-04-21T02:25:52.671Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-21T02:25:52.671Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e6eb0e52ac8d3876f131ae"
+  },
+  "auctionId": 1341456638,
+  "title": "Amg GT3",
+  "category": "Automotive",
+  "description": "Challenging yourself means being able to reach everything, but never the zenith. The 2015 introduced Mercedes-AMG GT3 immediately set new benchmarks. Its successor, unveiled in 2019, defines a new level of user-friendliness and economic efficiency.",
+  "images": [
+    "https://res.cloudinary.com/dki0p4gtm/image/upload/v1776741133/auctus/auctions/obcwssyfd2yelgj1gl8b.webp",
+    "https://res.cloudinary.com/dki0p4gtm/image/upload/v1776741133/auctus/auctions/oc4rwgbd2z5kmqm5sdcg.webp",
+    "https://res.cloudinary.com/dki0p4gtm/image/upload/v1776741133/auctus/auctions/mfrogcgx6zrkkt6qxlbh.jpg"
+  ],
+  "startingBid": 50000,
+  "currentBid": 52000,
+  "minIncrement": 1000,
+  "bidCount": 2,
+  "status": "closed",
+  "startsAt": {
+    "$date": "2026-04-21T03:12:00.000Z"
+  },
+  "endsAt": {
+    "$date": "2026-04-22T03:12:00.000Z"
+  },
+  "seller": {
+    "sellerUserId": {
+      "$oid": "69e6dd59ce876253182bc918"
+    },
+    "name": "YASH ENTERPRISE",
+    "rating": 5,
+    "reviews": 0,
+    "sales": 0,
+    "location": "Anand",
+    "memberSince": "2026"
+  },
+  "watchers": 0,
+  "watchersList": [],
+  "commissionEarned": 0,
+  "featured": false,
+  "hot": false,
+  "condition": "Mint / Brand New",
+  "authenticity": "",
+  "shipping": "Anand",
+  "returns": "Anand",
+  "winnerNotified": false,
+  "sellerNotified": false,
+  "bids": [
+    {
+      "bidderName": "Pranav gor",
+      "bidderUserId": {
+        "$oid": "69e62e171e53f973b2c5fc58"
+      },
+      "amount": 51000,
+      "timeLabel": "08:54 am",
+      "_id": {
+        "$oid": "69e6ee0752ac8d3876f132fa"
+      }
+    },
+    {
+      "bidderName": "Pranav gor",
+      "bidderUserId": {
+        "$oid": "69e62e171e53f973b2c5fc58"
+      },
+      "amount": 52000,
+      "timeLabel": "08:55 am",
+      "_id": {
+        "$oid": "69e6ee2a52ac8d3876f1330e"
+      }
+    }
+  ],
+  "specifications": [],
+  "createdAt": {
+    "$date": "2026-04-21T03:12:14.153Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-21T03:25:30.167Z"
+  },
+  "__v": 2
+}]

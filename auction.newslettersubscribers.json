@@ -1,0 +1,32 @@
+[{
+  "_id": {
+    "$oid": "69e6312bac75bdc2a69b9fb9"
+  },
+  "email": "pranavgor7777@gmail.com",
+  "subscribedAt": {
+    "$date": "2026-04-20T13:59:07.424Z"
+  },
+  "createdAt": {
+    "$date": "2026-04-20T13:59:07.432Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-20T13:59:07.432Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e6d89ec0711ce832b0c4b4"
+  },
+  "email": "devloper094@gmail.com",
+  "subscribedAt": {
+    "$date": "2026-04-21T01:53:34.671Z"
+  },
+  "createdAt": {
+    "$date": "2026-04-21T01:53:34.674Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-21T01:53:34.674Z"
+  },
+  "__v": 0
+}]

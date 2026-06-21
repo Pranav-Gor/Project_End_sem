@@ -1,0 +1,112 @@
+[{
+  "_id": {
+    "$oid": "69d235a0a0ba5740f538c80d"
+  },
+  "sellerUserId": {
+    "$oid": "69d15c57e419ccbd5f559f69"
+  },
+  "amount": 74213.1,
+  "currency": "INR",
+  "status": "settled",
+  "razorpayPayoutId": "pout_45e4fnmma",
+  "utr": "UTR715308615",
+  "initiatedAt": {
+    "$date": "2026-04-05T10:12:48.055Z"
+  },
+  "processedAt": null,
+  "settledAt": {
+    "$date": "2026-04-05T10:12:58.096Z"
+  },
+  "rejectionReason": null,
+  "createdAt": {
+    "$date": "2026-04-05T10:12:48.069Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-05T10:12:58.097Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69d263f79cbe0c96307189a9"
+  },
+  "sellerUserId": {
+    "$oid": "69d15c57e419ccbd5f559f69"
+  },
+  "amount": 524693.7000000001,
+  "currency": "INR",
+  "status": "processed",
+  "razorpayPayoutId": "pout_r4t9ollks",
+  "utr": null,
+  "initiatedAt": {
+    "$date": "2026-04-05T13:30:31.832Z"
+  },
+  "processedAt": null,
+  "settledAt": {
+    "$date": "2026-04-05T13:54:05.840Z"
+  },
+  "rejectionReason": null,
+  "createdAt": {
+    "$date": "2026-04-05T13:30:31.852Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-05T13:54:05.840Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e5f3b0870f1fd89df3352d"
+  },
+  "sellerUserId": {
+    "$oid": "69e5e4aeba4e2f7f8ac1d328"
+  },
+  "amount": 4590,
+  "currency": "INR",
+  "status": "processed",
+  "razorpayPayoutId": "pout_31ori3mf1",
+  "utr": null,
+  "initiatedAt": {
+    "$date": "2026-04-20T09:36:48.020Z"
+  },
+  "processedAt": null,
+  "settledAt": {
+    "$date": "2026-04-20T09:37:33.965Z"
+  },
+  "rejectionReason": null,
+  "createdAt": {
+    "$date": "2026-04-20T09:36:48.032Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-20T09:37:33.966Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e686c927dab3d4013f130f"
+  },
+  "sellerUserId": {
+    "$oid": "69e6808865417f10f39b05e2"
+  },
+  "amount": 45900,
+  "currency": "INR",
+  "status": "processed",
+  "razorpayPayoutId": "pout_jqiwrwvuo",
+  "utr": null,
+  "initiatedAt": {
+    "$date": "2026-04-20T20:04:25.435Z"
+  },
+  "processedAt": null,
+  "settledAt": {
+    "$date": "2026-04-20T20:04:46.718Z"
+  },
+  "rejectionReason": null,
+  "createdAt": {
+    "$date": "2026-04-20T20:04:25.441Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-20T20:04:46.719Z"
+  },
+  "__v": 0
+}]

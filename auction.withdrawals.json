@@ -1,0 +1,349 @@
+[{
+  "_id": {
+    "$oid": "69d269cae0711b7d2f57f863"
+  },
+  "userId": {
+    "$oid": "69d0ce08cdcadc0b39bfb495"
+  },
+  "amount": 5000,
+  "status": "processed",
+  "bankDetails": "25000000",
+  "requestedAt": {
+    "$date": "2026-04-05T13:55:22.852Z"
+  },
+  "__v": 0,
+  "adminNote": "",
+  "processedAt": {
+    "$date": "2026-04-05T13:55:33.351Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69d26c22e0711b7d2f57f925"
+  },
+  "userId": {
+    "$oid": "69d0ce08cdcadc0b39bfb495"
+  },
+  "amount": 1000,
+  "status": "processed",
+  "bankDetails": "1577777",
+  "requestedAt": {
+    "$date": "2026-04-05T14:05:22.961Z"
+  },
+  "__v": 0,
+  "adminNote": "",
+  "processedAt": {
+    "$date": "2026-04-05T14:09:19.635Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69d26d1fe0711b7d2f57f9af"
+  },
+  "userId": {
+    "$oid": "69d0ce08cdcadc0b39bfb495"
+  },
+  "amount": 100000,
+  "status": "processed",
+  "bankDetails": "wamois",
+  "requestedAt": {
+    "$date": "2026-04-05T14:09:35.539Z"
+  },
+  "__v": 0,
+  "adminNote": "",
+  "processedAt": {
+    "$date": "2026-04-05T14:13:01.195Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69d26d3be0711b7d2f57f9cf"
+  },
+  "userId": {
+    "$oid": "69d0ce08cdcadc0b39bfb495"
+  },
+  "amount": 499899050,
+  "status": "rejected",
+  "bankDetails": "14343",
+  "requestedAt": {
+    "$date": "2026-04-05T14:10:03.670Z"
+  },
+  "__v": 0,
+  "adminNote": "",
+  "processedAt": {
+    "$date": "2026-04-05T14:10:15.194Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69d53356e91f517598d0befb"
+  },
+  "userId": {
+    "$oid": "69d0ce08cdcadc0b39bfb495"
+  },
+  "amount": 1000000,
+  "status": "processed",
+  "bankDetails": "thfgbdgb",
+  "requestedAt": {
+    "$date": "2026-04-07T16:39:50.255Z"
+  },
+  "__v": 0,
+  "adminNote": "",
+  "processedAt": {
+    "$date": "2026-04-18T07:12:49.563Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69e34bed74487508cf1ff019"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "amount": 1000000,
+  "status": "processed",
+  "bankDetails": "10,00,000",
+  "requestedAt": {
+    "$date": "2026-04-18T09:16:29.181Z"
+  },
+  "__v": 0,
+  "adminNote": "",
+  "processedAt": {
+    "$date": "2026-04-18T09:16:56.047Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69e34c4574487508cf1ff060"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "amount": 200000,
+  "status": "processed",
+  "bankDetails": "lol",
+  "requestedAt": {
+    "$date": "2026-04-18T09:17:57.338Z"
+  },
+  "__v": 0,
+  "adminNote": "",
+  "processedAt": {
+    "$date": "2026-04-18T09:18:13.865Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69e3504574487508cf1ff0df"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "amount": 100,
+  "status": "processed",
+  "bankDetails": "UPI ID: p",
+  "requestedAt": {
+    "$date": "2026-04-18T09:35:01.611Z"
+  },
+  "__v": 0,
+  "adminNote": "",
+  "processedAt": {
+    "$date": "2026-04-18T09:44:34.833Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69e3504e74487508cf1ff0f1"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "amount": 100,
+  "status": "processed",
+  "bankDetails": "UPI ID: p000",
+  "requestedAt": {
+    "$date": "2026-04-18T09:35:10.189Z"
+  },
+  "__v": 0,
+  "adminNote": "",
+  "processedAt": {
+    "$date": "2026-04-18T09:45:08.256Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69e350f374487508cf1ff143"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "amount": 1013,
+  "status": "processed",
+  "bankDetails": "UPI ID: wamos@oksbi",
+  "requestedAt": {
+    "$date": "2026-04-18T09:37:55.439Z"
+  },
+  "__v": 0,
+  "adminNote": "",
+  "processedAt": {
+    "$date": "2026-04-18T09:45:01.722Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69e350fe74487508cf1ff155"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "amount": 98771,
+  "status": "rejected",
+  "bankDetails": "Wamos",
+  "requestedAt": {
+    "$date": "2026-04-18T09:38:06.999Z"
+  },
+  "__v": 0,
+  "adminNote": "",
+  "processedAt": {
+    "$date": "2026-04-18T09:42:19.254Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69e3512a74487508cf1ff173"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "amount": 1016,
+  "status": "processed",
+  "bankDetails": "UPI ID: wamis@kotakmahindra",
+  "requestedAt": {
+    "$date": "2026-04-18T09:38:50.997Z"
+  },
+  "__v": 0,
+  "adminNote": "",
+  "processedAt": {
+    "$date": "2026-04-18T09:39:25.738Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69e3527074487508cf1ff2d5"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "amount": 554879,
+  "status": "processed",
+  "bankDetails": "UPI ID: pranavgor@oksbi",
+  "requestedAt": {
+    "$date": "2026-04-18T09:44:16.204Z"
+  },
+  "__v": 0,
+  "adminNote": "",
+  "processedAt": {
+    "$date": "2026-04-18T09:44:55.179Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69e3560097dc087236803a5b"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "amount": 15000,
+  "status": "rejected",
+  "bankDetails": "UPI ID: oranavgor@oksbi",
+  "requestedAt": {
+    "$date": "2026-04-18T09:59:28.940Z"
+  },
+  "__v": 0,
+  "adminNote": "",
+  "processedAt": {
+    "$date": "2026-04-18T09:59:40.495Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69e359db97dc087236803c6c"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "amount": 1000000,
+  "status": "processed",
+  "bankDetails": "UPI ID: pranavgor@ok",
+  "requestedAt": {
+    "$date": "2026-04-18T10:15:55.173Z"
+  },
+  "__v": 0,
+  "adminNote": "",
+  "processedAt": {
+    "$date": "2026-04-20T08:42:39.056Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69e5e6efba4e2f7f8ac1d6af"
+  },
+  "userId": {
+    "$oid": "69e5e4aeba4e2f7f8ac1d328"
+  },
+  "amount": 100000,
+  "status": "processed",
+  "bankDetails": "UPI ID: vamos@oksbi",
+  "requestedAt": {
+    "$date": "2026-04-20T08:42:23.309Z"
+  },
+  "__v": 0,
+  "adminNote": "",
+  "processedAt": {
+    "$date": "2026-04-20T08:42:45.603Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69e6e0aece876253182bcade"
+  },
+  "userId": {
+    "$oid": "69e6dd59ce876253182bc918"
+  },
+  "amount": 2500,
+  "status": "pending",
+  "bankDetails": "UPI ID: pranavgor@oksbi",
+  "requestedAt": {
+    "$date": "2026-04-21T02:27:58.893Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e6ec5e52ac8d3876f1321f"
+  },
+  "userId": {
+    "$oid": "69e6dd59ce876253182bc918"
+  },
+  "amount": 5500,
+  "status": "pending",
+  "bankDetails": "UPI ID: pranavgor0@oksbi",
+  "requestedAt": {
+    "$date": "2026-04-21T03:17:50.863Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e6ed9452ac8d3876f132d6"
+  },
+  "userId": {
+    "$oid": "69e62e171e53f973b2c5fc58"
+  },
+  "amount": 5000,
+  "status": "pending",
+  "bankDetails": "UPI ID: pranavgor@oksbi",
+  "requestedAt": {
+    "$date": "2026-04-21T03:23:00.825Z"
+  },
+  "__v": 0
+}]

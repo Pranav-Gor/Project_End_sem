@@ -1,0 +1,504 @@
+[{
+  "_id": {
+    "$oid": "69d0ebefc4cfec30b6eca782"
+  },
+  "userId": {
+    "$oid": "69d0ce08cdcadc0b39bfb495"
+  },
+  "razorpayOrderId": "order_SZO4Pa6Bw9neba",
+  "razorpayPaymentId": "pay_SZO5LuHiutnRVn",
+  "amountPaise": 500000,
+  "amountInr": 5000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-04T10:46:07.061Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-04T10:46:07.061Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e34ba574487508cf1ff002"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "paymentIntentId": "mock_payment_1776503717075",
+  "razorpayPaymentId": "mock_payment_1776503717075",
+  "amountPaise": 10000000,
+  "amountInr": 100000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-18T09:15:17.088Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-18T09:15:17.088Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e34c3574487508cf1ff053"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "paymentIntentId": "mock_payment_1776503861370",
+  "razorpayPaymentId": "mock_payment_1776503861370",
+  "amountPaise": 10000000,
+  "amountInr": 100000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-18T09:17:41.374Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-18T09:17:41.374Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e34f0674487508cf1ff0b3"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "paymentIntentId": "mock_payment_1776504582861",
+  "razorpayPaymentId": "mock_payment_1776504582861",
+  "amountPaise": 10000000,
+  "amountInr": 100000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-18T09:29:42.877Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-18T09:29:42.877Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e3503774487508cf1ff0cd"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "paymentIntentId": "mock_payment_1776504887164",
+  "razorpayPaymentId": "mock_payment_1776504887164",
+  "amountPaise": 50000,
+  "amountInr": 500,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-18T09:34:47.165Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-18T09:34:47.165Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e350c274487508cf1ff131"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "paymentIntentId": "mock_payment_1776505026335",
+  "razorpayPaymentId": "mock_payment_1776505026335",
+  "amountPaise": 50000,
+  "amountInr": 500,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-18T09:37:06.338Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-18T09:37:06.338Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e351e974487508cf1ff27d"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "paymentIntentId": "mock_payment_1776505321332",
+  "razorpayPaymentId": "mock_payment_1776505321332",
+  "amountPaise": 55300,
+  "amountInr": 553,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-18T09:42:01.335Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-18T09:42:01.335Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e3525f74487508cf1ff2c3"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "paymentIntentId": "mock_payment_1776505439673",
+  "razorpayPaymentId": "mock_payment_1776505439673",
+  "amountPaise": 45555500,
+  "amountInr": 455555,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-18T09:43:59.674Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-18T09:43:59.674Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e355f597dc087236803a49"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "paymentIntentId": "mock_payment_1776506357505",
+  "razorpayPaymentId": "mock_payment_1776506357505",
+  "amountPaise": 1500000,
+  "amountInr": 15000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-18T09:59:17.512Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-18T09:59:17.512Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e359bd97dc087236803c45"
+  },
+  "userId": {
+    "$oid": "69e34a0d28f9f04bd6e19812"
+  },
+  "paymentIntentId": "mock_payment_1776507325163",
+  "razorpayPaymentId": "mock_payment_1776507325163",
+  "amountPaise": 100000000,
+  "amountInr": 1000000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-18T10:15:25.170Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-18T10:15:25.170Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e55b61e0169debb2701b5e"
+  },
+  "userId": {
+    "$oid": "69e55b3ee0169debb2701b42"
+  },
+  "paymentIntentId": "mock_payment_1776638817064",
+  "razorpayPaymentId": "mock_payment_1776638817064",
+  "amountPaise": 500000000,
+  "amountInr": 5000000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-19T22:46:57.069Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-19T22:46:57.069Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e5e6e2ba4e2f7f8ac1d6a2"
+  },
+  "userId": {
+    "$oid": "69e5e4aeba4e2f7f8ac1d328"
+  },
+  "paymentIntentId": "mock_payment_1776674530173",
+  "razorpayPaymentId": "mock_payment_1776674530173",
+  "amountPaise": 10000000,
+  "amountInr": 100000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-20T08:42:10.175Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-20T08:42:10.175Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e5ee3a3a5bcc4cafd3fc04"
+  },
+  "userId": {
+    "$oid": "69cb5747fdcac4ef177977a5"
+  },
+  "paymentIntentId": "mock_payment_1776676410679",
+  "razorpayPaymentId": "mock_payment_1776676410679",
+  "amountPaise": 5000000,
+  "amountInr": 50000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-20T09:13:30.684Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-20T09:13:30.684Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e5ee6d3a5bcc4cafd3fc89"
+  },
+  "userId": {
+    "$oid": "69e5e4aeba4e2f7f8ac1d328"
+  },
+  "paymentIntentId": "mock_payment_1776676461033",
+  "razorpayPaymentId": "mock_payment_1776676461033",
+  "amountPaise": 500000,
+  "amountInr": 5000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-20T09:14:21.038Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-20T09:14:21.038Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e601244eaa1fcf14407ae1"
+  },
+  "userId": {
+    "$oid": "69e5e4aeba4e2f7f8ac1d328"
+  },
+  "paymentIntentId": "mock_payment_1776681252694",
+  "razorpayPaymentId": "mock_payment_1776681252694",
+  "amountPaise": 10000000,
+  "amountInr": 100000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-20T10:34:12.766Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-20T10:34:12.766Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e6046d4eaa1fcf14407d63"
+  },
+  "userId": {
+    "$oid": "69e55b3ee0169debb2701b42"
+  },
+  "paymentIntentId": "mock_payment_1776682093864",
+  "razorpayPaymentId": "mock_payment_1776682093864",
+  "amountPaise": 500000000,
+  "amountInr": 5000000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-20T10:48:13.870Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-20T10:48:13.870Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e60e10fbf16fcf8ef33473"
+  },
+  "userId": {
+    "$oid": "69e5e4aeba4e2f7f8ac1d328"
+  },
+  "paymentIntentId": "mock_payment_1776684560836",
+  "razorpayPaymentId": "mock_payment_1776684560836",
+  "amountPaise": 1000000000,
+  "amountInr": 10000000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-20T11:29:20.871Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-20T11:29:20.871Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e6247e32eab3bcd2ad8a3e"
+  },
+  "userId": {
+    "$oid": "69d15c57e419ccbd5f559f69"
+  },
+  "paymentIntentId": "mock_payment_1776690302287",
+  "razorpayPaymentId": "mock_payment_1776690302287",
+  "amountPaise": 10000000,
+  "amountInr": 100000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-20T13:05:02.299Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-20T13:05:02.299Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e63b9380026dc7ec7f8236"
+  },
+  "userId": {
+    "$oid": "69e631afac75bdc2a69ba004"
+  },
+  "paymentIntentId": "mock_payment_1776696211087",
+  "razorpayPaymentId": "mock_payment_1776696211087",
+  "amountPaise": 500000000,
+  "amountInr": 5000000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-20T14:43:31.100Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-20T14:43:31.100Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e6404ff23e5ca67a947300"
+  },
+  "userId": {
+    "$oid": "69e62e171e53f973b2c5fc58"
+  },
+  "paymentIntentId": "mock_payment_1776697423618",
+  "razorpayPaymentId": "mock_payment_1776697423618",
+  "amountPaise": 100000000,
+  "amountInr": 1000000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-20T15:03:43.623Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-20T15:03:43.623Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e66e9d0c511c14b3d949a6"
+  },
+  "userId": {
+    "$oid": "69e66dd40c511c14b3d948fb"
+  },
+  "paymentIntentId": "mock_payment_1776709277957",
+  "razorpayPaymentId": "mock_payment_1776709277957",
+  "amountPaise": 50000,
+  "amountInr": 500,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-20T18:21:17.959Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-20T18:21:17.959Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e66f8a0c511c14b3d94a5b"
+  },
+  "userId": {
+    "$oid": "69e6273032eab3bcd2ad8b42"
+  },
+  "paymentIntentId": "mock_payment_1776709514376",
+  "razorpayPaymentId": "mock_payment_1776709514376",
+  "amountPaise": 5000000,
+  "amountInr": 50000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-20T18:25:14.376Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-20T18:25:14.376Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e6e088ce876253182bca67"
+  },
+  "userId": {
+    "$oid": "69e6dd59ce876253182bc918"
+  },
+  "paymentIntentId": "mock_payment_1776738440930",
+  "razorpayPaymentId": "mock_payment_1776738440930",
+  "amountPaise": 500000,
+  "amountInr": 5000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-21T02:27:20.933Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-21T02:27:20.933Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69e6ec5352ac8d3876f13212"
+  },
+  "userId": {
+    "$oid": "69e6dd59ce876253182bc918"
+  },
+  "paymentIntentId": "mock_payment_1776741459867",
+  "razorpayPaymentId": "mock_payment_1776741459867",
+  "amountPaise": 500000,
+  "amountInr": 5000,
+  "currency": "INR",
+  "status": "captured",
+  "createdAt": {
+    "$date": "2026-04-21T03:17:39.869Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-21T03:17:39.869Z"
+  },
+  "__v": 0
+}]
